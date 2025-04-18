@@ -27,10 +27,10 @@
             .then(data => {
                 roomCode = data.roomCode;
                 document.getElementById('roomCode').innerText = `Room Code: ${roomCode}`;
-                pollPlayers(); // Aloita pelaajalistan päivitys
             })
             .catch(error => console.error('Error creating room:', error));
         }
+
 
         function updatePlayerList(players) {
             playerListElement.innerHTML = ''; // Tyhjennä lista ensin
