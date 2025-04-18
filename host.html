@@ -89,7 +89,6 @@
                 return;
             }
         
-            // Extract only the room code (strip the "Room Code: " prefix)
             const roomCode = roomCodeElement.textContent.split(': ')[1]; 
         
             const startButton = document.getElementById('startGameButton');
@@ -107,6 +106,7 @@
                 if (data.success) {
                     alert('Game started successfully!');
                     console.log(`Game started for room: ${roomCode}`);
+                    document.getElementById('chatWindow').style.display = 'block'; // Show chat window
                 } else {
                     alert(data.message || 'Failed to start the game.');
                     startButton.style.display = 'block'; // Show the button again if the request fails
