@@ -64,13 +64,18 @@
     <script>
         window.onload = function fetchRoomCode() {
             fetch('https://guesswho-backend.onrender.com/latest-room')
-            .then(response => response.json())
+            .then(response => {
+                if (!response.ok) {
+                    throw new Error(`HTTP error! status: ${response.status}`);
+                }
+                return response.json();
+            })
             .then(data => {
                 if (data.success) {
                     document.getElementById('roomCode').value = data.roomCode;
                     console.log(`Fetched room code: ${data.roomCode}`);
                 } else {
-                    alert('No active room found. Please try again later.');
+                    alert('No active room found.');
                     console.error('Failed to fetch room code:', data.message);
                 }
             })
@@ -112,6 +117,10 @@
         function checkGameStatus() {
             setInterval(() => {
                 const roomCode = document.getElementById('roomCode').value.trim();
+                if (!roomCode) {
+                    console.error('Room code is missing.');
+                    return;
+                }
                 fetch(`https://guesswho-backend.onrender.com/game-status/${roomCode}`)
                 .then(response => response.json())
                 .then(data => {
@@ -155,6 +164,10 @@
 
         function fetchMessages() {
             const roomCode = document.getElementById('roomCode').value.trim();
+            if (!roomCode) {
+                console.error('Room code is missing.');
+                return;
+            }
             fetch(`https://guesswho-backend.onrender.com/get-messages/${roomCode}`)
             .then(response => response.json())
             .then(data => {
