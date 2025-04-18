@@ -83,7 +83,7 @@ button:disabled {
 }
 
 #messages {
-    height: 100px;
+    height: 200px;
     overflow-y: auto; /* Mahdollistetaan pystysuuntainen skrollaus */
     border: 1px solid #ddd; /* Vaaleanharmaa reunus */
     padding: 10px;
@@ -95,6 +95,7 @@ button:disabled {
 #messages p {
     margin: 5px 0; /* Viestien väliin tilaa */
     font-size: 14px;
+    max-height: 100px;
     color: #333; /* Tummanharmaa viestiteksti */
 }
 
