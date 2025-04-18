@@ -4,24 +4,35 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Host Game</title>
-    <style>
-        body {
-            font-family: Arial, sans-serif;
-            text-align: center;
-            padding: 20px;
-        }
-        #roomCode {
-            font-size: 24px;
-            font-weight: bold;
-            margin-top: 20px;
-        }
-    </style>
 </head>
 <body>
-    <h1>Host a Game</h1>
+    <h1>Test Host Page</h1>
     <button onclick="createRoom()">Create Room</button>
-    <div id="roomCode"></div>
-    <p>Share this code with players to join your room.</p>
-    <script src="host.js"></script>
+    <p id="roomCode"></p>
+    <h2>Players:</h2>
+    <ul id="playerList"></ul>
+    <script>
+        let players = [];
+
+        function createRoom() {
+            const roomCode = Math.random().toString(36).substring(2, 8).toUpperCase(); // Satunnainen huonekoodi
+            document.getElementById('roomCode').innerText = `Room Code: ${roomCode}`;
+        }
+
+        function addPlayer(playerName) {
+            players.push(playerName);
+            const list = document.getElementById('playerList');
+            list.innerHTML = '';
+            players.forEach(player => {
+                const li = document.createElement('li');
+                li.textContent = player;
+                list.appendChild(li);
+            });
+        }
+
+        // Simuloi pelaajien liittymistä (testausta varten)
+        setTimeout(() => addPlayer('Player 1'), 2000);
+        setTimeout(() => addPlayer('Player 2'), 4000);
+    </script>
 </body>
 </html>
