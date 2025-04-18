@@ -142,11 +142,7 @@
             p.textContent = `${data.senderName}: ${data.message}`;
             messagesElement.appendChild(p);
         
-            // Limit the number of messages displayed
-            const maxMessages = 10; // Adjust this limit as needed
-            if (messagesElement.children.length > maxMessages) {
-                messagesElement.removeChild(messagesElement.firstChild); // Remove oldest message
-            }
+            messagesElement.scrollTop = messagesElement.scrollHeight;
         });
 
         window.onload = fetchRoomCode; // Fetch room code when page loads
