@@ -76,12 +76,12 @@
         // Luo huone ja lisää hostin nimi näkyviin
         function createRoom() {
             const hostName = document.getElementById('hostName').value.trim();
-
+        
             if (!hostName) {
                 alert('Please enter your name.');
                 return;
             }
-
+        
             fetch('https://guesswho-backend.onrender.com/create-room', {
                 method: 'POST',
                 headers: {
@@ -95,13 +95,18 @@
                     roomCode = data.roomCode;
                     document.getElementById('roomCode').innerText = `Room Code: ${roomCode}`;
                     startPlayerPolling();
-                    document.getElementById('startGameButton').style.display = 'block';
+        
+                    // Piilotetaan Create Room -painike
+                    document.getElementById('hostForm').style.display = 'none';
+        
+                    document.getElementById('startGameButton').style.display = 'block'; // Näytetään Start Game -painike
                 } else {
                     alert('Failed to create room.');
                 }
             })
             .catch(error => console.error('Error creating room:', error));
         }
+
 
         // Päivitä pelaajalista
         function updatePlayerList(players) {
