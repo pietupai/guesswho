@@ -167,25 +167,36 @@
 
         // Hae viestit ja päivitä chat
         function fetchMessages() {
+            const roomCode = document.getElementById('roomCode').innerText.replace('Room Code: ', '').trim();
+        
+            if (!roomCode) {
+                console.error('Room code is missing.');
+                return; // Lopetetaan, jos huonekoodi puuttuu
+            }
+        
             fetch(`https://guesswho-backend.onrender.com/get-messages/${roomCode}`)
-            .then(response => response.json())
-            .then(data => {
-                if (data.success) {
-                    const messagesDiv = document.getElementById('messages');
-                    messagesDiv.innerHTML = '';
-                    data.messages.forEach(msg => {
-                        const p = document.createElement('p');
-                        p.textContent = msg;
-                        messagesDiv.appendChild(p);
-                    });
-                    messagesDiv.scrollTop = messagesDiv.scrollHeight;
-                } else {
-                    console.error('Failed to fetch messages:', data.message);
-                }
-            })
-            .catch(error => console.error('Error fetching messages:', error));
+                .then(response => {
+                    if (!response.ok) {
+                        throw new Error(`HTTP error! status: ${response.status}`);
+                    }
+                    return response.json();
+                })
+                .then(data => {
+                    if (data.success) {
+                        const messagesDiv = document.getElementById('messages');
+                        messagesDiv.innerHTML = '';
+                        data.messages.forEach(msg => {
+                            const p = document.createElement('p');
+                            p.textContent = msg;
+                            messagesDiv.appendChild(p);
+                        });
+                        messagesDiv.scrollTop = messagesDiv.scrollHeight;
+                    } else {
+                        console.error('Failed to fetch messages:', data.message);
+                    }
+                })
+                .catch(error => console.error('Error fetching messages:', error));
         }
-
         setInterval(fetchMessages, 3000); // Päivitä viestit 3 sekunnin välein
     </script>
 </body>
