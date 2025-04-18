@@ -118,18 +118,26 @@
             });
         }
 
+        socket.on('chatMessage', (data) => {
+            const messagesElement = document.getElementById('messages');
+            const p = document.createElement('p');
+            p.textContent = `${data.senderName}: ${data.message}`; // Display sender and message
+            messagesElement.appendChild(p);
+        });
+        
         function sendMessage() {
             const message = document.getElementById('chatInput').value.trim();
             const hostName = document.getElementById('hostName').value.trim();
-
+        
             if (!message) {
                 alert('Please write a message before sending.');
                 return;
             }
-
-            socket.emit('sendMessage', { roomCode, senderName: hostName, message });
-            document.getElementById('chatInput').value = '';
+        
+            socket.emit('chatMessage', { roomCode, senderName: hostName, message });
+            document.getElementById('chatInput').value = ''; // Clear input field
         }
+
     </script>
 </body>
 </html>
