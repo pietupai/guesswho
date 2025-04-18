@@ -17,30 +17,48 @@
 </head>
 <body>
     <h1>Welcome to the Game!</h1>
-    <p>Enter the room code to join:</p>
+    <p>Enter your name and the room code to join:</p>
+    
+    <!-- Pelaajan nimi -->
+    <input type="text" id="playerName" placeholder="Your Name">
+
+    <!-- Huonekoodi -->
     <input type="text" id="roomCode" placeholder="Room Code">
+    
     <button onclick="joinGame()">Join Game</button>
+
     <script>
         function joinGame() {
-            const roomCode = document.getElementById('roomCode').value;
+            const playerName = document.getElementById('playerName').value.trim();
+            const roomCode = document.getElementById('roomCode').value.trim();
+
+            if (!playerName) {
+                alert('Please enter your name.');
+                return;
+            }
+
+            if (!roomCode) {
+                alert('Please enter a room code.');
+                return;
+            }
+
             fetch('https://guesswho-backend.onrender.com/join-room', {
                 method: 'POST',
                 headers: {
                     'Content-Type': 'application/json',
                 },
-                body: JSON.stringify({ roomCode, playerName: 'TestPlayer' }),
+                body: JSON.stringify({ roomCode, playerName }),
             })
             .then(response => response.json())
             .then(data => {
                 if (data.success) {
-                    alert(`Joined room: ${roomCode}`);
+                    alert(`Welcome ${playerName}, you joined room: ${roomCode}`);
                 } else {
                     alert(data.message || 'Room not found!');
                 }
             })
             .catch(error => console.error('Error:', error));
         }
-
     </script>
 </body>
 </html>
