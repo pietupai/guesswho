@@ -16,66 +16,78 @@
             font-size: 16px;
             width: 80%;
         }
-        .input-label {
-            font-weight: bold;
-            margin-bottom: 5px;
-            display: block;
+        #chatWindow {
+            display: none;
+            border: 1px solid #ccc;
+            padding: 10px;
+            width: 80%;
+            margin: 20px auto;
+            background-color: #f9f9f9;
+        }
+        #messages {
+            height: 200px;
+            overflow-y: scroll;
+            border: 1px solid #ddd;
+            padding: 10px;
+            background-color: #fff;
+            margin-bottom: 10px;
+        }
+        #chatInput {
+            width: 75%;
+            padding: 10px;
+            margin-right: 5px;
         }
     </style>
 </head>
 <body>
     <h1>Welcome to the Game!</h1>
     <form id="joinForm" onsubmit="event.preventDefault(); joinGame();">
-        <!-- Huonekoodi -->
-        <label for="roomCode" class="input-label">Room Code</label>
-        <input type="text" id="roomCode" name="roomCode" placeholder="Room Code" readonly>
-
-        <!-- Pelaajan nimi -->
-        <label for="playerName" class="input-label">Your Name</label>
-        <input type="text" id="playerName" name="playerName" placeholder="Enter Your Name">
-        
-        <!-- Liity-painike -->
+        <label for="roomCode">Room Code:</label>
+        <input type="text" id="roomCode" name="roomCode" readonly>
+        <label for="playerName">Your Name:</label>
+        <input type="text" id="playerName" name="playerName" placeholder="Enter your name">
         <button type="submit">Join Game</button>
     </form>
 
     <p id="gameStatus" style="font-weight: bold; color: green;"></p>
 
+    <!-- Chat-ikkuna -->
+    <div id="chatWindow">
+        <h3>Game Chat</h3>
+        <div id="messages">
+            <p><em>No messages yet. Start chatting!</em></p>
+        </div>
+        <input type="text" id="chatInput" placeholder="Write your message here...">
+        <button onclick="sendMessage()">Send</button>
+    </div>
+
     <script>
-        // Haetaan huonekoodi backendistä, kun sivu ladataan
         window.onload = function fetchRoomCode() {
             fetch('https://guesswho-backend.onrender.com/latest-room')
             .then(response => response.json())
             .then(data => {
                 if (data.success) {
-                    const roomCodeField = document.getElementById('roomCode');
-                    roomCodeField.value = data.roomCode;
-                    console.log(`Fetched room code: ${data.roomCode}`); // Lokitus
+                    document.getElementById('roomCode').value = data.roomCode;
+                    console.log(`Fetched room code: ${data.roomCode}`);
                 } else {
                     alert('No active room found. Please try again later.');
-                    console.error('Failed to fetch room code:', data.message); // Lokitus
+                    console.error('Failed to fetch room code:', data.message);
                 }
             })
-            .catch(error => console.error('Error fetching room code:', error)); // Lokitus
+            .catch(error => console.error('Error fetching room code:', error));
 
             // Tarkista pelin tila
             checkGameStatus();
         };
 
-        // Lähetetään pelaajan nimi ja huonekoodi backendille liittymistä varten
         function joinGame() {
             const playerName = document.getElementById('playerName').value.trim();
             const roomCode = document.getElementById('roomCode').value.trim();
 
             if (!playerName) {
                 alert('Please enter your name.');
-                console.warn('Player name is missing.');
                 return;
             }
-
-            // Estä uusi painallus ja piilota painike
-            const joinButton = document.querySelector('button');
-            joinButton.disabled = true;
-            joinButton.style.display = 'none';
 
             fetch('https://guesswho-backend.onrender.com/join-room', {
                 method: 'POST',
@@ -88,24 +100,15 @@
             .then(data => {
                 if (data.success) {
                     alert(`Welcome ${playerName}, you successfully joined room: ${roomCode}`);
-                    console.log(`Player ${playerName} joined room ${roomCode}.`); // Lokitus
+                    console.log(`Player ${playerName} joined room ${roomCode}`);
                 } else {
                     alert(data.message || 'Failed to join the room.');
-                    console.error(`Join failed for room ${roomCode}: ${data.message}`); // Lokitus
-                    // Näytä painike uudelleen, jos liittyminen epäonnistui
-                    joinButton.disabled = false;
-                    joinButton.style.display = 'block';
+                    console.error(`Join failed for room ${roomCode}: ${data.message}`);
                 }
             })
-            .catch(error => {
-                console.error('Error joining room:', error);
-                // Näytä painike uudelleen virhetilanteessa
-                joinButton.disabled = false;
-                joinButton.style.display = 'block';
-            });
+            .catch(error => console.error('Error joining room:', error));
         }
 
-        // Tarkista onko peli käynnistetty
         function checkGameStatus() {
             setInterval(() => {
                 const roomCode = document.getElementById('roomCode').value.trim();
@@ -114,12 +117,64 @@
                 .then(data => {
                     if (data.status === 'started') {
                         document.getElementById('gameStatus').innerText = 'Game has started!';
-                        console.log('Game status updated: Game has started!'); // Lokitus
+                        console.log('Game status updated: Game has started!');
+                        document.getElementById('chatWindow').style.display = 'block';
                     }
                 })
-                .catch(error => console.error('Error checking game status:', error)); // Lokitus
-            }, 3000); // Päivitetään 3 sekunnin välein
+                .catch(error => console.error('Error checking game status:', error));
+            }, 3000);
         }
+
+        function sendMessage() {
+            const message = document.getElementById('chatInput').value.trim();
+            const roomCode = document.getElementById('roomCode').value.trim();
+
+            if (!message) {
+                alert('Please write a message before sending.');
+                return;
+            }
+
+            fetch(`https://guesswho-backend.onrender.com/send-message`, {
+                method: 'POST',
+                headers: {
+                    'Content-Type': 'application/json',
+                },
+                body: JSON.stringify({ roomCode, message }),
+            })
+            .then(response => response.json())
+            .then(data => {
+                if (data.success) {
+                    document.getElementById('chatInput').value = '';
+                    console.log('Message sent:', message);
+                } else {
+                    alert('Failed to send message.');
+                }
+            })
+            .catch(error => console.error('Error sending message:', error));
+        }
+
+        function fetchMessages() {
+            const roomCode = document.getElementById('roomCode').value.trim();
+            fetch(`https://guesswho-backend.onrender.com/get-messages/${roomCode}`)
+            .then(response => response.json())
+            .then(data => {
+                if (data.success) {
+                    const messagesDiv = document.getElementById('messages');
+                    messagesDiv.innerHTML = '';
+                    data.messages.forEach(msg => {
+                        const p = document.createElement('p');
+                        p.textContent = msg;
+                        messagesDiv.appendChild(p);
+                    });
+                    messagesDiv.scrollTop = messagesDiv.scrollHeight;
+                } else {
+                    console.error('Failed to fetch messages:', data.message);
+                }
+            })
+            .catch(error => console.error('Error fetching messages:', error));
+        }
+
+        setInterval(fetchMessages, 3000); // Päivitä viestit 3 sekunnin välein
     </script>
 </body>
 </html>
