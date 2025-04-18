@@ -59,6 +59,7 @@
 
                     // Liity WebSocket-huoneeseen
                     socket.emit('joinRoom', roomCode);
+                    fetchPlayerList();
 
                     // Kuuntele pelaajalistaa
                     socket.on('playerJoined', (players) => {
@@ -80,6 +81,19 @@
                 li.textContent = player;
                 playerListElement.appendChild(li);
             });
+        }
+
+        function fetchPlayerList() {
+            fetch(`https://guesswho-backend.onrender.com/room-players/${roomCode}`)
+                .then(response => response.json())
+                .then(data => {
+                    if (data.success) {
+                        updatePlayerList(data.players);
+                    } else {
+                        alert(data.message || 'Failed to fetch player list.');
+                    }
+                })
+                .catch(error => console.error('Error fetching player list:', error));
         }
 
         function startGame() {
@@ -118,6 +132,10 @@
             });
         }
 
+        socket.on('playerJoined', (players) => {
+            updatePlayerList(players); // Update list in real time
+        });
+        
         socket.on('chatMessage', (data) => {
             const messagesElement = document.getElementById('messages');
             const p = document.createElement('p');
