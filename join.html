@@ -23,9 +23,24 @@
     <script>
         function joinGame() {
             const roomCode = document.getElementById('roomCode').value;
-            alert(`Attempting to join room: ${roomCode}`);
-            // Lisää logiikka huonekoodin käsittelemiseen
+            fetch('https://guesswho-backend.onrender.com/join-room', {
+                method: 'POST',
+                headers: {
+                    'Content-Type': 'application/json',
+                },
+                body: JSON.stringify({ roomCode, playerName: 'TestPlayer' }),
+            })
+            .then(response => response.json())
+            .then(data => {
+                if (data.success) {
+                    alert(`Joined room: ${roomCode}`);
+                } else {
+                    alert(data.message || 'Room not found!');
+                }
+            })
+            .catch(error => console.error('Error:', error));
         }
+
     </script>
 </body>
 </html>
