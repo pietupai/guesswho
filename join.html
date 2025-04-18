@@ -116,6 +116,12 @@
             console.log(`Updated players list: ${players}`);
         });
 
+        socket.on('gameStarted', (data) => {
+            console.log(data.message); // Log to confirm event reception
+            document.getElementById('chatWindow').style.display = 'block'; // Show chat window
+        });
+
+
         window.onload = fetchRoomCode; // Fetch room code when page loads
     </script>
 </head>
@@ -134,5 +140,15 @@
 
     <h2 id="playersTitle" style="display: block;">Players:</h2>
     <ul id="playerList"></ul> <!-- Displays players dynamically -->
+
+    <!-- Chat Window -->
+    <div id="chatWindow" style="display: none;">
+        <h3>Game Chat</h3>
+        <div id="messages">
+            <p><em>No messages yet. Start chatting!</em></p>
+        </div>
+        <input type="text" id="chatInput" placeholder="Write your message here...">
+        <button onclick="sendMessage()">Send</button>
+    </div>
 </body>
 </html>
