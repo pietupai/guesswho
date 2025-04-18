@@ -27,6 +27,26 @@ body {
     display: none;
 }
 
+#chatWindow {
+    border: 1px solid #ccc;
+    padding: 10px;
+    border-radius: 5px;
+    max-width: 300px; /* Adjust as needed for Host/Join page layout */
+    display: flex;
+    flex-direction: column;
+}
+
+#messages {
+    overflow-y: auto;
+    max-height: 300px; /* Adjust height to match the layout */
+    padding: 5px;
+    margin-bottom: 10px;
+}
+
+#chatInput {
+    width: calc(100% - 50px); /* Adjust to fit alongside Send button */
+}
+
 button {
     padding: 10px 20px;
     font-size: 16px;
