@@ -1,51 +1,47 @@
 <!DOCTYPE html>
-<html lang="fi">
+<html lang="en">
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Liity huoneeseen</title>
-    <link rel="stylesheet" href="join.css"> <!-- Ulkoinen CSS tiedosto -->
+    <title>Join a Room</title>
+    <link rel="stylesheet" href="join.css"> <!-- Link to external CSS -->
     <script src="https://cdn.socket.io/4.3.2/socket.io.min.js"></script> <!-- Socket.IO -->
     <script defer>
-        const socket = io('https://guesswho-backend.onrender.com'); // Muuta backend-URL tarvittaessa
+        const socket = io('https://guesswho-backend.onrender.com'); // Update backend URL if necessary
 
         function fetchRoomCode() {
             fetch('https://guesswho-backend.onrender.com/latest-room')
             .then(response => response.json())
             .then(data => {
+                console.log('API response:', data); // Debug backend response
+                const roomCodeElement = document.getElementById('roomCode');
+                console.log('Room Code Element:', roomCodeElement); // Debug element
                 if (data.success) {
-                    const roomCodeElement = document.getElementById('roomCode'); // Hae huonekoodi-elementti
-                    roomCodeElement.textContent = `Room Code: ${data.roomCode}`; // Näytä huonekoodi tekstinä
-                    console.log(`Haettu huonekoodi: ${data.roomCode}`);
+                    roomCodeElement.textContent = `Room Code: ${data.roomCode}`;
                 } else {
-                    alert(data.message || 'Huonekoodin haku epäonnistui.');
+                    alert(data.message || 'Failed to fetch room code.');
                 }
             })
             .catch(error => {
-                console.error('Virhe huonekoodia haettaessa:', error);
+                console.error('Error fetching room code:', error);
             });
         }
 
         function joinGame() {
-            const joinButton = document.querySelector('button[type="submit"]'); // Hae nappi
             const playerName = document.getElementById('playerName').value.trim();
             const roomCodeElement = document.getElementById('roomCode');
-        
-            if (!playerName) {
-                alert('Syötä nimesi.');
-                return;
-            }
-        
-            if (!roomCodeElement || !roomCodeElement.textContent.trim()) {
-                alert('Huonekoodia ei löytynyt.');
-                return;
-            }
-        
-            const roomCode = roomCodeElement.textContent.split(': ')[1]; // Poimitaan pelkkä huonekoodi
             
-            // Piilotetaan nappi heti, kun painike aktivoituu
-            joinButton.style.display = 'none'; 
-        
+            if (!playerName) {
+                alert('Please enter your name.');
+                return;
+            }
+
+            if (!roomCodeElement || !roomCodeElement.textContent.trim()) {
+                alert('Room code not found.');
+                return;
+            }
+
+            const roomCode = roomCodeElement.textContent.split(': ')[1]; // Extract actual room code
             fetch('https://guesswho-backend.onrender.com/join-room', {
                 method: 'POST',
                 headers: {
@@ -56,45 +52,43 @@
             .then(response => response.json())
             .then(data => {
                 if (data.success) {
-                    alert(`Liitytty huoneeseen: ${roomCode}`);
-                    console.log(`Pelaaja ${playerName} liittyi huoneeseen ${roomCode}`);
-                    socket.emit('joinRoom', roomCode); // WebSocket ilmoitus palvelimelle
+                    alert(`Joined room: ${roomCode}`);
+                    console.log(`Player ${playerName} joined room ${roomCode}`);
+                    socket.emit('joinRoom', roomCode); // Notify server via WebSocket
                 } else {
-                    alert(data.message || 'Liittyminen epäonnistui.');
-                    joinButton.style.display = 'block'; // Näytä nappi uudelleen epäonnistumisessa
+                    alert(data.message || 'Failed to join the room.');
                 }
             })
             .catch(error => {
-                console.error('Virhe liityttäessä huoneeseen:', error);
-                joinButton.style.display = 'block'; // Näytä nappi uudelleen verkkovirheessä
+                console.error('Error joining room:', error);
             });
         }
 
         socket.on('playerJoined', (players) => {
             const playerList = document.getElementById('playerList');
-            playerList.innerHTML = ''; // Tyhjennä lista ennen päivitystä
+            playerList.innerHTML = ''; // Clear the list before updating
             players.forEach(player => {
                 const li = document.createElement('li');
                 li.textContent = player;
                 playerList.appendChild(li);
             });
-            console.log(`Päivitetty pelaajalista: ${players}`);
+            console.log(`Updated player list: ${players}`);
         });
 
-        window.onload = fetchRoomCode; // Haetaan huonekoodi sivun latautuessa
+        window.onload = fetchRoomCode; // Fetch room code when page loads
     </script>
 </head>
 <body>
-    <h1>Liity huoneeseen</h1>
+    <h1>Join a Room</h1>
     <form id="joinForm" onsubmit="joinGame(); return false;">
-        <input type="text" id="playerName" placeholder="Syötä nimesi" required><br>
-        <button type="submit">Liity</button>
+        <input type="text" id="playerName" placeholder="Enter your name" required><br>
+        <button type="submit">Join</button>
     </form>
 
-    <h2>Huonekoodi:</h2>
-    <p id="roomCode"></p> <!-- Näytetään huonekoodi tekstinä -->
+    <h2>Room Code:</h2>
+    <p id="roomCode"></p> <!-- Displays the room code as text -->
 
-    <h2>Pelaajat huoneessa:</h2>
-    <ul id="playerList"></ul> <!-- Pelaajalista, päivittyy WebSocketin avulla -->
+    <h2>Players in the Room:</h2>
+    <ul id="playerList"></ul> <!-- Displays the player list dynamically -->
 </body>
 </html>
