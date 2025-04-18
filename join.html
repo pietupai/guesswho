@@ -41,28 +41,22 @@
                     const roomCodeInput = document.getElementById('roomCode');
                     roomCodeInput.value = data.roomCode;
                     roomCode = data.roomCode;
-                    console.log(`Fetched room code: ${roomCode}`);
-
+        
                     // Liity huoneeseen WebSocketin avulla
                     socket.emit('joinRoom', roomCode);
-
-                    // Kuuntele pelin alkamista
-                    socket.on('gameStarted', (data) => {
-                        document.getElementById('gameStatus').innerText = data.message;
-                        document.getElementById('chatWindow').style.display = 'block';
-                    });
-
-                    // Kuuntele uusia viestejä
-                    socket.on('newMessage', (data) => {
-                        const { senderName, message } = data;
-                        const messagesDiv = document.getElementById('messages');
-                        const p = document.createElement('p');
-                        p.textContent = `${senderName}: ${message}`;
-                        messagesDiv.appendChild(p);
-                        messagesDiv.scrollTop = messagesDiv.scrollHeight;
+        
+                    // Kuuntele pelaajien liittymistä
+                    socket.on('playerJoined', (players) => {
+                        const playerList = document.getElementById('playerList');
+                        playerList.innerHTML = '';
+                        players.forEach(player => {
+                            const li = document.createElement('li');
+                            li.textContent = player;
+                            playerList.appendChild(li);
+                        });
                     });
                 } else {
-                    alert('No active room found.');
+                    alert(data.message || 'Failed to fetch room code.');
                     console.error('Failed to fetch room code:', data.message);
                 }
             })
