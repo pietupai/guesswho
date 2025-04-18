@@ -31,8 +31,9 @@ body {
     border: 1px solid #ccc;
     padding: 10px;
     border-radius: 5px;
-    max-width: 300px; /* Adjust as needed for Host/Join page layout */
+    max-width: 300px;
     display: flex;
+    margin: 0 auto;
     flex-direction: column;
 }
 
