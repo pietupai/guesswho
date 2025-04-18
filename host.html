@@ -152,32 +152,38 @@
         }
 
         // Lähetä viesti chatissa
-        function sendMessage() {
-            const message = document.getElementById('chatInput').value.trim();
-            const hostName = document.getElementById('hostName').value.trim();
-            if (!message) {
-                alert('Please write a message before sending.');
-                return;
+        function fetchMessages() {
+            const roomCode = document.getElementById('roomCode').innerText.replace('Room Code: ', '').trim();
+        
+            if (!roomCode) {
+                console.error('Room code is missing.');
+                return; // Lopetetaan, jos huonekoodi puuttuu
             }
-
-            fetch(`https://guesswho-backend.onrender.com/send-message`, {
-                method: 'POST',
-                headers: {
-                    'Content-Type': 'application/json',
-                },
-                body: JSON.stringify({ roomCode, message, senderName: hostName }), // Lähetetään nimi mukana
-            })
-            .then(response => response.json())
-            .then(data => {
-                if (data.success) {
-                    document.getElementById('chatInput').value = '';
-                    console.log('Message sent:', message);
-                } else {
-                    alert('Failed to send message.');
-                }
-            })
-            .catch(error => console.error('Error sending message:', error));
+        
+            fetch(`https://guesswho-backend.onrender.com/get-messages/${roomCode}`)
+                .then(response => {
+                    if (!response.ok) {
+                        throw new Error(`HTTP error! status: ${response.status}`);
+                    }
+                    return response.json();
+                })
+                .then(data => {
+                    if (data.success) {
+                        const messagesDiv = document.getElementById('messages');
+                        messagesDiv.innerHTML = '';
+                        data.messages.forEach(msg => {
+                            const p = document.createElement('p');
+                            p.textContent = `${msg.senderName}: ${msg.message}`; // Näytetään nimi ja viesti
+                            messagesDiv.appendChild(p);
+                        });
+                        messagesDiv.scrollTop = messagesDiv.scrollHeight;
+                    } else {
+                        console.error('Failed to fetch messages:', data.message);
+                    }
+                })
+                .catch(error => console.error('Error fetching messages:', error));
         }
+
 
         // Hae viestit ja päivitä chat
         function fetchMessages() {
