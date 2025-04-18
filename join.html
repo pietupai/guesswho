@@ -136,31 +136,38 @@
 
         function sendMessage() {
             const message = document.getElementById('chatInput').value.trim();
-            const roomCode = document.getElementById('roomCode').value.trim();
-
+            const playerName = document.getElementById('playerName').value.trim(); // Lähettäjän nimi
+            const roomCode = document.getElementById('roomCode').value.trim(); // Huonekoodi
+        
             if (!message) {
                 alert('Please write a message before sending.');
                 return;
             }
-
+        
+            if (!playerName) {
+                alert('Your name is missing. Please enter it.');
+                return;
+            }
+        
             fetch(`https://guesswho-backend.onrender.com/send-message`, {
                 method: 'POST',
                 headers: {
                     'Content-Type': 'application/json',
                 },
-                body: JSON.stringify({ roomCode, message }),
+                body: JSON.stringify({ roomCode, message, senderName: playerName }), // Lähetetään nimi mukana
             })
             .then(response => response.json())
             .then(data => {
                 if (data.success) {
                     document.getElementById('chatInput').value = '';
-                    console.log('Message sent:', message);
+                    console.log('Message sent:', `${playerName}: ${message}`); // Lokitetaan viesti
                 } else {
                     alert('Failed to send message.');
                 }
             })
             .catch(error => console.error('Error sending message:', error));
         }
+
 
         function fetchMessages() {
             const roomCode = document.getElementById('roomCode').value.trim();
