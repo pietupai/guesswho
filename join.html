@@ -16,20 +16,27 @@
             font-size: 16px;
             width: 80%;
         }
+        .input-label {
+            font-weight: bold;
+            margin-bottom: 5px;
+            display: block;
+        }
     </style>
 </head>
 <body>
     <h1>Welcome to the Game!</h1>
-    <p>Your room code will be automatically filled:</p>
-    
-    <!-- Huonekoodi näkyy tässä automaattisesti -->
-    <input type="text" id="roomCode" placeholder="Room Code" readonly>
-    
-    <!-- Pelaajan nimi -->
-    <input type="text" id="playerName" placeholder="Enter Your Name">
-    
-    <!-- Liity-painike -->
-    <button onclick="joinGame()">Join Game</button>
+    <form id="joinForm" onsubmit="event.preventDefault(); joinGame();">
+        <!-- Huonekoodi -->
+        <label for="roomCode" class="input-label">Room Code</label>
+        <input type="text" id="roomCode" name="roomCode" placeholder="Room Code" readonly>
+
+        <!-- Pelaajan nimi -->
+        <label for="playerName" class="input-label">Your Name</label>
+        <input type="text" id="playerName" name="playerName" placeholder="Enter Your Name">
+        
+        <!-- Liity-painike -->
+        <button type="submit">Join Game</button>
+    </form>
 
     <script>
         // Haetaan huonekoodi backendistä, kun sivu ladataan
@@ -38,12 +45,15 @@
             .then(response => response.json())
             .then(data => {
                 if (data.success) {
-                    document.getElementById('roomCode').value = data.roomCode;
+                    const roomCodeField = document.getElementById('roomCode');
+                    roomCodeField.value = data.roomCode;
+                    console.log(`Fetched room code: ${data.roomCode}`); // Lokitus
                 } else {
                     alert('No active room found. Please try again later.');
+                    console.error('Failed to fetch room code:', data.message); // Lokitus
                 }
             })
-            .catch(error => console.error('Error fetching room code:', error));
+            .catch(error => console.error('Error fetching room code:', error)); // Lokitus
         };
 
         // Lähetetään pelaajan nimi ja huonekoodi backendille liittymistä varten
@@ -54,6 +64,7 @@
             // Tarkistetaan, että nimi on syötetty
             if (!playerName) {
                 alert('Please enter your name.');
+                console.warn('Player name is missing.'); // Lokitus
                 return;
             }
 
@@ -69,11 +80,13 @@
             .then(data => {
                 if (data.success) {
                     alert(`Welcome ${playerName}, you successfully joined room: ${roomCode}`);
+                    console.log(`Player ${playerName} joined room ${roomCode}.`); // Lokitus
                 } else {
                     alert(data.message || 'Failed to join the room.');
+                    console.error(`Join failed for room ${roomCode}: ${data.message}`); // Lokitus
                 }
             })
-            .catch(error => console.error('Error joining room:', error));
+            .catch(error => console.error('Error joining room:', error)); // Lokitus
         }
     </script>
 </body>
