@@ -32,11 +32,12 @@
     <p id="roomCode"></p>
     <h2>Players:</h2>
     <ul id="playerList"></ul>
+    <button id="startGameButton" onclick="startGame()" style="display: none;">Start Game</button>
     <script>
         let roomCode = '';
         const playerListElement = document.getElementById('playerList');
 
-        // Funktion huoneen luomiseksi
+        // Luo huone ja lisää huonekoodi näkyviin
         function createRoom() {
             fetch('https://guesswho-backend.onrender.com/create-room', {
                 method: 'POST',
@@ -50,7 +51,8 @@
                 if (data.success) {
                     roomCode = data.roomCode; // Talletetaan huonekoodi
                     document.getElementById('roomCode').innerText = `Room Code: ${roomCode}`;
-                    startPlayerPolling(); // Aloitetaan pelaajien listan päivitys
+                    startPlayerPolling(); // Aloitetaan pelaajalistan päivitys
+                    document.getElementById('startGameButton').style.display = 'block'; // Näytetään Start Game -painike
                 } else {
                     alert('Failed to create room.');
                 }
@@ -58,9 +60,9 @@
             .catch(error => console.error('Error creating room:', error));
         }
 
-        // Päivittää pelaajalistan
+        // Päivitä pelaajalista
         function updatePlayerList(players) {
-            playerListElement.innerHTML = ''; // Tyhjennetään lista ennen päivitystä
+            playerListElement.innerHTML = '';
             players.forEach(player => {
                 const li = document.createElement('li');
                 li.textContent = player;
@@ -68,20 +70,40 @@
             });
         }
 
-        // Hakee pelaajalistan backendistä
+        // Pelaajien lista backendistä
         function startPlayerPolling() {
             setInterval(() => {
                 fetch(`https://guesswho-backend.onrender.com/room/${roomCode}`)
                 .then(response => response.json())
                 .then(data => {
                     if (data.success) {
-                        updatePlayerList(data.players); // Päivittää liittyneet pelaajat
+                        updatePlayerList(data.players);
                     } else {
                         console.error('Failed to fetch player list:', data.message);
                     }
                 })
                 .catch(error => console.error('Error polling players:', error));
             }, 3000); // Päivitetään lista 3 sekunnin välein
+        }
+
+        // Käynnistä peli
+        function startGame() {
+            fetch(`https://guesswho-backend.onrender.com/start-game`, {
+                method: 'POST',
+                headers: {
+                    'Content-Type': 'application/json',
+                },
+                body: JSON.stringify({ roomCode })
+            })
+            .then(response => response.json())
+            .then(data => {
+                if (data.success) {
+                    alert('Game started!');
+                } else {
+                    alert('Failed to start the game.');
+                }
+            })
+            .catch(error => console.error('Error starting game:', error));
         }
     </script>
 </body>
