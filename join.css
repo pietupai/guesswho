@@ -39,7 +39,7 @@ body {
 
 #messages {
     overflow-y: auto;
-    max-height: 300px; /* Adjust height to match the layout */
+    max-height: 100px; /* Adjust height to match the layout */
     padding: 5px;
     margin-bottom: 10px;
 }
