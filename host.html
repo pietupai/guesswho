@@ -62,13 +62,16 @@
 
         // Päivitä pelaajalista
         function updatePlayerList(players) {
-            playerListElement.innerHTML = '';
-            players.forEach(player => {
+            const uniquePlayers = [...new Set(players)]; // Poistaa duplikaatit pelaajista
+            playerListElement.innerHTML = ''; // Tyhjennetään lista ennen päivitystä
+        
+            uniquePlayers.forEach(player => {
                 const li = document.createElement('li');
                 li.textContent = player;
                 playerListElement.appendChild(li);
             });
         }
+
 
         // Pelaajien lista backendistä
         function startPlayerPolling() {
