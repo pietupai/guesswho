@@ -33,20 +33,23 @@
 
         window.onload = function fetchRoomCode() {
             fetch('https://guesswho-backend.onrender.com/latest-room')
-            .then(response => response.json())
-            .then(data => {
-                if (data.success) {
-                    document.getElementById('roomCode').value = data.roomCode;
-                    console.log(`Fetched room code: ${data.roomCode}`);
-                } else {
-                    alert('No active room found.');
-                    console.error('Failed to fetch room code:', data.message);
-                }
-            })
-            .catch(error => console.error('Error fetching room code:', error));
-
-            checkGameStatus();
+                .then(response => response.json())
+                .then(data => {
+                    if (data.success) {
+                        const roomCodeInput = document.getElementById('roomCode');
+                        roomCodeInput.value = data.roomCode;
+                        console.log(`Fetched room code: ${data.roomCode}`);
+                        
+                        // Käynnistä game status -pollaus vasta nyt
+                        checkGameStatus();
+                    } else {
+                        alert('No active room found.');
+                        console.error('Failed to fetch room code:', data.message);
+                    }
+                })
+                .catch(error => console.error('Error fetching room code:', error));
         };
+
 
         function joinGame() {
             const playerName = document.getElementById('playerName').value.trim();
@@ -79,16 +82,13 @@
         }
 
         function checkGameStatus() {
-            if (gameStatusChecked) return; // Estetään useat käynnistykset
-            gameStatusChecked = true; // Merkitään pollaus käynnistetyksi
-
             const roomCode = document.getElementById('roomCode').value.trim();
             
             if (!roomCode) {
                 console.error('Room code is missing.');
-                return;
+                return; // Lopetetaan, jos huonekoodi puuttuu
             }
-
+        
             const intervalId = setInterval(() => {
                 fetch(`https://guesswho-backend.onrender.com/game-status/${roomCode}`)
                 .then(response => response.json())
@@ -97,7 +97,7 @@
                         document.getElementById('gameStatus').innerText = 'Game has started!';
                         console.log('Game status updated: Game has started!');
                         document.getElementById('chatWindow').style.display = 'block';
-
+        
                         clearInterval(intervalId); // Lopetetaan pollaus
                     }
                 })
