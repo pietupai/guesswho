@@ -27,20 +27,25 @@
         }
 
         function joinGame() {
+            const joinButton = document.querySelector('button[type="submit"]'); // Hae nappi
             const playerName = document.getElementById('playerName').value.trim();
             const roomCodeElement = document.getElementById('roomCode');
-            
+        
             if (!playerName) {
                 alert('Syötä nimesi.');
                 return;
             }
-
+        
             if (!roomCodeElement || !roomCodeElement.textContent.trim()) {
                 alert('Huonekoodia ei löytynyt.');
                 return;
             }
-
+        
             const roomCode = roomCodeElement.textContent.split(': ')[1]; // Poimitaan pelkkä huonekoodi
+            
+            // Piilotetaan nappi heti, kun painike aktivoituu
+            joinButton.style.display = 'none'; 
+        
             fetch('https://guesswho-backend.onrender.com/join-room', {
                 method: 'POST',
                 headers: {
@@ -53,13 +58,15 @@
                 if (data.success) {
                     alert(`Liitytty huoneeseen: ${roomCode}`);
                     console.log(`Pelaaja ${playerName} liittyi huoneeseen ${roomCode}`);
-                    socket.emit('joinRoom', roomCode); // Ilmoita palvelimelle WebSocketilla
+                    socket.emit('joinRoom', roomCode); // WebSocket ilmoitus palvelimelle
                 } else {
                     alert(data.message || 'Liittyminen epäonnistui.');
+                    joinButton.style.display = 'block'; // Näytä nappi uudelleen epäonnistumisessa
                 }
             })
             .catch(error => {
                 console.error('Virhe liityttäessä huoneeseen:', error);
+                joinButton.style.display = 'block'; // Näytä nappi uudelleen verkkovirheessä
             });
         }
 
