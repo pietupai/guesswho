@@ -58,6 +58,7 @@
                     alert(`Joined room: ${roomCode}`);
                     console.log(`Player ${playerName} joined room ${roomCode}`);
                     socket.emit('joinRoom', roomCode); // Notify the server
+                    fetchPlayerList(roomCode); // Immediately fetch existing players
                 } else {
                     alert(data.message || 'Failed to join the room.');
                     joinButton.style.display = 'block'; // Show button again if joining fails
@@ -67,6 +68,19 @@
                 console.error('Error joining room:', error);
                 joinButton.style.display = 'block'; // Show button again on network error
             });
+        }
+
+        function fetchPlayerList(roomCode) {
+            fetch(`https://guesswho-backend.onrender.com/room-players/${roomCode}`)
+                .then(response => response.json())
+                .then(data => {
+                    if (data.success) {
+                        updatePlayerList(data.players); // Populate list with current players
+                    } else {
+                        alert(data.message || 'Failed to fetch player list.');
+                    }
+                })
+                .catch(error => console.error('Error fetching player list:', error));
         }
 
         socket.on('playerJoined', (players) => {
