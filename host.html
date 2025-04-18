@@ -83,33 +83,38 @@
         }
 
         function startGame() {
-            fetch(`https://guesswho-backend.onrender.com/start-game`, {
+            const startButton = document.getElementById('startGameButton'); // Valitse Start Game -painike
+            startButton.style.display = 'none'; // Piilota painike painamisen jälkeen
+        
+            const roomCode = document.getElementById('roomCode').value.trim();
+        
+            if (!roomCode) {
+                alert('Huonekoodi puuttuu.');
+                startButton.style.display = 'block'; // Näytä painike takaisin virhetilanteessa
+                return;
+            }
+        
+            fetch('https://guesswho-backend.onrender.com/start-game', {
                 method: 'POST',
                 headers: {
                     'Content-Type': 'application/json',
                 },
-                body: JSON.stringify({ roomCode })
+                body: JSON.stringify({ roomCode }),
             })
             .then(response => response.json())
             .then(data => {
                 if (data.success) {
-                    alert('Game started!');
-                    document.getElementById('chatWindow').style.display = 'block';
-
-                    // Kuuntele uusia viestejä
-                    socket.on('newMessage', (data) => {
-                        const { senderName, message } = data;
-                        const messagesDiv = document.getElementById('messages');
-                        const p = document.createElement('p');
-                        p.textContent = `${senderName}: ${message}`;
-                        messagesDiv.appendChild(p);
-                        messagesDiv.scrollTop = messagesDiv.scrollHeight;
-                    });
+                    alert('Peli käynnistetty onnistuneesti!');
+                    console.log(`Peli käynnistetty huoneessa: ${roomCode}`);
                 } else {
-                    alert('Failed to start the game.');
+                    alert(data.message || 'Pelin käynnistäminen epäonnistui.');
+                    startButton.style.display = 'block'; // Näytä painike takaisin virhetilanteessa
                 }
             })
-            .catch(error => console.error('Error starting game:', error));
+            .catch(error => {
+                console.error('Virhe peliä käynnistettäessä:', error);
+                startButton.style.display = 'block'; // Näytä painike takaisin verkkovirheessä
+            });
         }
 
         function sendMessage() {
