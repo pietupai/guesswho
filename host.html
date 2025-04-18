@@ -4,48 +4,7 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Host Game</title>
-    <style>
-        body {
-            font-family: Arial, sans-serif;
-            text-align: center;
-            padding: 20px;
-        }
-        button {
-            margin: 10px;
-            padding: 10px;
-            font-size: 16px;
-            width: 80%;
-        }
-        ul {
-            list-style-type: none;
-            padding: 0;
-        }
-        li {
-            font-size: 18px;
-            margin: 5px 0;
-        }
-        #chatWindow {
-            display: none;
-            border: 1px solid #ccc;
-            padding: 10px;
-            width: 80%;
-            margin: 20px auto;
-            background-color: #f9f9f9;
-        }
-        #messages {
-            height: 200px;
-            overflow-y: scroll;
-            border: 1px solid #ddd;
-            padding: 10px;
-            background-color: #fff;
-            margin-bottom: 10px;
-        }
-        #chatInput {
-            width: 75%;
-            padding: 10px;
-            margin-right: 5px;
-        }
-    </style>
+    <link rel="stylesheet" href="host.css">
 </head>
 <body>
     <h1>Host a Game</h1>
@@ -57,10 +16,10 @@
     <p id="roomCode"></p>
     <h2>Players:</h2>
     <ul id="playerList"></ul>
-    <button id="startGameButton" onclick="startGame()" style="display: none;">Start Game</button>
+    <button id="startGameButton" style="display: none;" onclick="startGame()">Start Game</button>
 
-    <!-- Chat-ikkuna -->
-    <div id="chatWindow">
+    <!-- Chat Window -->
+    <div id="chatWindow" style="display: none;">
         <h3>Game Chat</h3>
         <div id="messages">
             <p><em>No messages yet. Start chatting!</em></p>
@@ -69,37 +28,43 @@
         <button onclick="sendMessage()">Send</button>
     </div>
 
+    <script src="https://cdn.socket.io/4.3.2/socket.io.min.js"></script>
     <script>
         let roomCode = '';
         const playerListElement = document.getElementById('playerList');
+        const socket = io('https://guesswho-backend.onrender.com');
 
-        // Luo huone ja lisää hostin nimi näkyviin
         function createRoom() {
             const hostName = document.getElementById('hostName').value.trim();
-        
+
             if (!hostName) {
                 alert('Please enter your name.');
                 return;
             }
-        
+
             fetch('https://guesswho-backend.onrender.com/create-room', {
                 method: 'POST',
                 headers: {
                     'Content-Type': 'application/json',
                 },
-                body: JSON.stringify({ hostName }) // Lähetetään hostin nimi
+                body: JSON.stringify({ hostName })
             })
             .then(response => response.json())
             .then(data => {
                 if (data.success) {
                     roomCode = data.roomCode;
                     document.getElementById('roomCode').innerText = `Room Code: ${roomCode}`;
-                    startPlayerPolling();
-        
-                    // Piilotetaan Create Room -painike
                     document.getElementById('hostForm').style.display = 'none';
-        
-                    document.getElementById('startGameButton').style.display = 'block'; // Näytetään Start Game -painike
+                    document.getElementById('startGameButton').style.display = 'block';
+
+                    // Liity WebSocket-huoneeseen
+                    socket.emit('joinRoom', roomCode);
+
+                    // Kuuntele pelaajalistaa
+                    socket.on('playerJoined', (players) => {
+                        updatePlayerList(players);
+                    });
+
                 } else {
                     alert('Failed to create room.');
                 }
@@ -107,8 +72,6 @@
             .catch(error => console.error('Error creating room:', error));
         }
 
-
-        // Päivitä pelaajalista
         function updatePlayerList(players) {
             const uniquePlayers = [...new Set(players)];
             playerListElement.innerHTML = '';
@@ -119,23 +82,6 @@
             });
         }
 
-        // Pelaajien lista backendistä
-        function startPlayerPolling() {
-            setInterval(() => {
-                fetch(`https://guesswho-backend.onrender.com/room/${roomCode}`)
-                .then(response => response.json())
-                .then(data => {
-                    if (data.success) {
-                        updatePlayerList(data.players);
-                    } else {
-                        console.error('Failed to fetch player list:', data.message);
-                    }
-                })
-                .catch(error => console.error('Error polling players:', error));
-            }, 3000);
-        }
-
-        // Käynnistä peli
         function startGame() {
             fetch(`https://guesswho-backend.onrender.com/start-game`, {
                 method: 'POST',
@@ -149,10 +95,16 @@
                 if (data.success) {
                     alert('Game started!');
                     document.getElementById('chatWindow').style.display = 'block';
-                    document.getElementById('startGameButton').style.display = 'none'; // Piilotetaan Start-painike
-        
-                    // Käynnistä viestien hakeminen vasta nyt
-                    setInterval(fetchMessages, 3000);
+
+                    // Kuuntele uusia viestejä
+                    socket.on('newMessage', (data) => {
+                        const { senderName, message } = data;
+                        const messagesDiv = document.getElementById('messages');
+                        const p = document.createElement('p');
+                        p.textContent = `${senderName}: ${message}`;
+                        messagesDiv.appendChild(p);
+                        messagesDiv.scrollTop = messagesDiv.scrollHeight;
+                    });
                 } else {
                     alert('Failed to start the game.');
                 }
@@ -160,65 +112,17 @@
             .catch(error => console.error('Error starting game:', error));
         }
 
-        // Lähetä viesti chatissa
         function sendMessage() {
             const message = document.getElementById('chatInput').value.trim();
             const hostName = document.getElementById('hostName').value.trim();
+
             if (!message) {
                 alert('Please write a message before sending.');
                 return;
             }
 
-            fetch(`https://guesswho-backend.onrender.com/send-message`, {
-                method: 'POST',
-                headers: {
-                    'Content-Type': 'application/json',
-                },
-                body: JSON.stringify({ roomCode, message, senderName: hostName }), // Lähetetään nimi mukana
-            })
-            .then(response => response.json())
-            .then(data => {
-                if (data.success) {
-                    document.getElementById('chatInput').value = '';
-                    console.log('Message sent:', message);
-                } else {
-                    alert('Failed to send message.');
-                }
-            })
-            .catch(error => console.error('Error sending message:', error));
-        }
-
-        // Hae viestit ja päivitä chat
-        function fetchMessages() {
-            const roomCode = document.getElementById('roomCode').innerText.replace('Room Code: ', '').trim();
-
-            if (!roomCode) {
-                console.error('Room code is missing.');
-                return; // Lopetetaan, jos huonekoodi puuttuu
-            }
-
-            fetch(`https://guesswho-backend.onrender.com/get-messages/${roomCode}`)
-            .then(response => {
-                if (!response.ok) {
-                    throw new Error(`HTTP error! status: ${response.status}`);
-                }
-                return response.json();
-            })
-            .then(data => {
-                if (data.success) {
-                    const messagesDiv = document.getElementById('messages');
-                    messagesDiv.innerHTML = '';
-                    data.messages.forEach(msg => {
-                        const p = document.createElement('p');
-                        p.textContent = `${msg.senderName}: ${msg.message}`; // Näytetään nimi ja viesti
-                        messagesDiv.appendChild(p);
-                    });
-                    messagesDiv.scrollTop = messagesDiv.scrollHeight;
-                } else {
-                    console.error('Failed to fetch messages:', data.message);
-                }
-            })
-            .catch(error => console.error('Error fetching messages:', error));
+            socket.emit('sendMessage', { roomCode, senderName: hostName, message });
+            document.getElementById('chatInput').value = '';
         }
     </script>
 </body>
