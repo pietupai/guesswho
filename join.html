@@ -16,59 +16,42 @@
             font-size: 16px;
             width: 80%;
         }
-        .input-label {
-            font-weight: bold;
-            margin-bottom: 5px;
-            display: block;
-        }
     </style>
 </head>
 <body>
     <h1>Welcome to the Game!</h1>
-    <form id="joinForm" onsubmit="event.preventDefault(); joinGame();">
-        <!-- Huonekoodi -->
-        <label for="roomCode" class="input-label">Room Code</label>
-        <input type="text" id="roomCode" name="roomCode" placeholder="Room Code" readonly>
-
-        <!-- Pelaajan nimi -->
-        <label for="playerName" class="input-label">Your Name</label>
-        <input type="text" id="playerName" name="playerName" placeholder="Enter Your Name">
-        
-        <!-- Liity-painike -->
-        <button type="submit">Join Game</button>
-    </form>
+    <p>Your room code will be automatically filled:</p>
+    <input type="text" id="roomCode" placeholder="Room Code" readonly>
+    <input type="text" id="playerName" placeholder="Enter Your Name">
+    <button onclick="joinGame()">Join Game</button>
+    <p id="gameStatus" style="font-weight: bold; color: green;"></p>
 
     <script>
-        // Haetaan huonekoodi backendistä, kun sivu ladataan
         window.onload = function fetchRoomCode() {
             fetch('https://guesswho-backend.onrender.com/latest-room')
             .then(response => response.json())
             .then(data => {
                 if (data.success) {
-                    const roomCodeField = document.getElementById('roomCode');
-                    roomCodeField.value = data.roomCode;
-                    console.log(`Fetched room code: ${data.roomCode}`); // Lokitus
+                    document.getElementById('roomCode').value = data.roomCode;
                 } else {
                     alert('No active room found. Please try again later.');
-                    console.error('Failed to fetch room code:', data.message); // Lokitus
                 }
             })
-            .catch(error => console.error('Error fetching room code:', error)); // Lokitus
+            .catch(error => console.error('Error fetching room code:', error));
+
+            // Tarkista pelin tila
+            checkGameStatus();
         };
 
-        // Lähetetään pelaajan nimi ja huonekoodi backendille liittymistä varten
         function joinGame() {
             const playerName = document.getElementById('playerName').value.trim();
             const roomCode = document.getElementById('roomCode').value.trim();
 
-            // Tarkistetaan, että nimi on syötetty
             if (!playerName) {
                 alert('Please enter your name.');
-                console.warn('Player name is missing.'); // Lokitus
                 return;
             }
 
-            // Lähetetään tiedot backendille liittymispyyntöä varten
             fetch('https://guesswho-backend.onrender.com/join-room', {
                 method: 'POST',
                 headers: {
@@ -80,13 +63,26 @@
             .then(data => {
                 if (data.success) {
                     alert(`Welcome ${playerName}, you successfully joined room: ${roomCode}`);
-                    console.log(`Player ${playerName} joined room ${roomCode}.`); // Lokitus
                 } else {
                     alert(data.message || 'Failed to join the room.');
-                    console.error(`Join failed for room ${roomCode}: ${data.message}`); // Lokitus
                 }
             })
-            .catch(error => console.error('Error joining room:', error)); // Lokitus
+            .catch(error => console.error('Error joining room:', error));
+        }
+
+        // Tarkista onko peli käynnistetty
+        function checkGameStatus() {
+            setInterval(() => {
+                const roomCode = document.getElementById('roomCode').value.trim();
+                fetch(`https://guesswho-backend.onrender.com/game-status/${roomCode}`)
+                .then(response => response.json())
+                .then(data => {
+                    if (data.status === 'started') {
+                        document.getElementById('gameStatus').innerText = 'Game has started!';
+                    }
+                })
+                .catch(error => console.error('Error checking game status:', error));
+            }, 3000); // Päivitetään 3 sekunnin välein
         }
     </script>
 </body>
