@@ -4,7 +4,7 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Join Game</title>
-    <link rel="stylesheet" href="join.css"> <!-- Linkitetään CSS-tiedosto -->
+    <link rel="stylesheet" href="join.css">
 </head>
 <body>
     <h1>Welcome to the Game!</h1>
@@ -19,7 +19,7 @@
     <p id="gameStatus" style="font-weight: bold; color: green;"></p>
 
     <!-- Chat Window -->
-    <div id="chatWindow">
+    <div id="chatWindow" style="display: none;">
         <h3>Game Chat</h3>
         <div id="messages">
             <p><em>No messages yet. Start chatting!</em></p>
@@ -28,32 +28,49 @@
         <button onclick="sendMessage()">Send</button>
     </div>
 
+    <script src="https://cdn.socket.io/4.3.2/socket.io.min.js"></script>
     <script>
-        let gameStatusChecked = false;
+        const socket = io('https://guesswho-backend.onrender.com');
+        let roomCode = '';
 
         window.onload = function fetchRoomCode() {
             fetch('https://guesswho-backend.onrender.com/latest-room')
-                .then(response => response.json())
-                .then(data => {
-                    if (data.success) {
-                        const roomCodeInput = document.getElementById('roomCode');
-                        roomCodeInput.value = data.roomCode;
-                        console.log(`Fetched room code: ${data.roomCode}`);
-                        
-                        // Käynnistä game status -pollaus vasta nyt
-                        checkGameStatus();
-                    } else {
-                        alert('No active room found.');
-                        console.error('Failed to fetch room code:', data.message);
-                    }
-                })
-                .catch(error => console.error('Error fetching room code:', error));
-        };
+            .then(response => response.json())
+            .then(data => {
+                if (data.success) {
+                    const roomCodeInput = document.getElementById('roomCode');
+                    roomCodeInput.value = data.roomCode;
+                    roomCode = data.roomCode;
+                    console.log(`Fetched room code: ${roomCode}`);
 
+                    // Liity huoneeseen WebSocketin avulla
+                    socket.emit('joinRoom', roomCode);
+
+                    // Kuuntele pelin alkamista
+                    socket.on('gameStarted', (data) => {
+                        document.getElementById('gameStatus').innerText = data.message;
+                        document.getElementById('chatWindow').style.display = 'block';
+                    });
+
+                    // Kuuntele uusia viestejä
+                    socket.on('newMessage', (data) => {
+                        const { senderName, message } = data;
+                        const messagesDiv = document.getElementById('messages');
+                        const p = document.createElement('p');
+                        p.textContent = `${senderName}: ${message}`;
+                        messagesDiv.appendChild(p);
+                        messagesDiv.scrollTop = messagesDiv.scrollHeight;
+                    });
+                } else {
+                    alert('No active room found.');
+                    console.error('Failed to fetch room code:', data.message);
+                }
+            })
+            .catch(error => console.error('Error fetching room code:', error));
+        };
 
         function joinGame() {
             const playerName = document.getElementById('playerName').value.trim();
-            const roomCode = document.getElementById('roomCode').value.trim();
 
             if (!playerName) {
                 alert('Please enter your name.');
@@ -81,95 +98,18 @@
             .catch(error => console.error('Error joining room:', error));
         }
 
-        function checkGameStatus() {
-            const roomCode = document.getElementById('roomCode').value.trim();
-            
-            if (!roomCode) {
-                console.error('Room code is missing.');
-                return; // Lopetetaan, jos huonekoodi puuttuu
-            }
-        
-            const intervalId = setInterval(() => {
-                fetch(`https://guesswho-backend.onrender.com/game-status/${roomCode}`)
-                .then(response => response.json())
-                .then(data => {
-                    if (data.status === 'started') {
-                        document.getElementById('gameStatus').innerText = 'Game has started!';
-                        console.log('Game status updated: Game has started!');
-                        document.getElementById('chatWindow').style.display = 'block';
-        
-                        clearInterval(intervalId); // Lopetetaan pelin tilan pollaus
-        
-                        // Käynnistetään viestien pollaus
-                        setInterval(fetchMessages, 3000);
-                    }
-                })
-                .catch(error => console.error('Error checking game status:', error));
-            }, 3000);
-        }
-
-
         function sendMessage() {
             const message = document.getElementById('chatInput').value.trim();
             const playerName = document.getElementById('playerName').value.trim();
-            const roomCode = document.getElementById('roomCode').value.trim();
 
             if (!message) {
                 alert('Please write a message before sending.');
                 return;
             }
 
-            fetch(`https://guesswho-backend.onrender.com/send-message`, {
-                method: 'POST',
-                headers: {
-                    'Content-Type': 'application/json',
-                },
-                body: JSON.stringify({ roomCode, message, senderName: playerName }),
-            })
-            .then(response => response.json())
-            .then(data => {
-                if (data.success) {
-                    document.getElementById('chatInput').value = '';
-                    console.log('Message sent:', message);
-                } else {
-                    alert('Failed to send message.');
-                }
-            })
-            .catch(error => console.error('Error sending message:', error));
+            socket.emit('sendMessage', { roomCode, senderName: playerName, message });
+            document.getElementById('chatInput').value = '';
         }
-
-        function fetchMessages() {
-            const roomCode = document.getElementById('roomCode').value.trim();
-        
-            if (!roomCode) {
-                console.error('Room code is missing.');
-                return; // Lopetetaan, jos huonekoodi puuttuu
-            }
-        
-            fetch(`https://guesswho-backend.onrender.com/get-messages/${roomCode}`)
-            .then(response => {
-                if (!response.ok) {
-                    throw new Error(`HTTP error! status: ${response.status}`);
-                }
-                return response.json();
-            })
-            .then(data => {
-                if (data.success) {
-                    const messagesDiv = document.getElementById('messages');
-                    messagesDiv.innerHTML = ''; // Tyhjennetään viestit ennen uusia
-                    data.messages.forEach(msg => {
-                        const p = document.createElement('p');
-                        p.textContent = `${msg.senderName}: ${msg.message}`; // Näytetään nimi ja viesti
-                        messagesDiv.appendChild(p);
-                    });
-                    messagesDiv.scrollTop = messagesDiv.scrollHeight; // Skrollataan uusimpaan viestiin
-                } else {
-                    console.error('Failed to fetch messages:', data.message);
-                }
-            })
-            .catch(error => console.error('Error fetching messages:', error));
-        }
-
     </script>
 </body>
 </html>
