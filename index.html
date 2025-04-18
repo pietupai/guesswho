@@ -1,0 +1,765 @@
+<!DOCTYPE html>
+<html lang="en">
+<script>
+  const debugMode = true;
+  //const debugMode = false;
+</script>
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Character Guessing Game</title>
+  <style>
+    body {
+      font-family: Arial, sans-serif;
+      margin: 20px;
+    }
+    #question-area {
+      width: 100%;
+      max-width: 100vw;
+      margin: 0 auto;
+    }
+    button, select {
+      padding: 10px 5px;
+      cursor: pointer;
+      margin: 10px 5px;
+    }
+    label {
+        display: block;
+        margin: 0;
+        padding: 0;
+    }
+    input {
+        display: block;
+        margin: 5px 0 0 0;
+        padding: 5px;
+        width: 100%;
+        max-width: 100%; 
+        box-sizing: border-box;
+    }
+    .character {
+      margin: 10px 0;
+      border: 1px solid #ccc;
+      padding: 10px;
+      border-radius: 5px;
+    }
+    .character span {
+      color: blue;
+      cursor: pointer;
+      text-decoration: underline;
+    }
+    .marked {
+      background-color: #e0ffe0; /* Highlight marked characters */
+    }
+</style>
+
+
+</style>
+
+</head>
+<body>
+  <h1>Character Guessing Game</h1>
+
+  <!-- Dropdown menu for character count -->
+  <label for="character-count">Select number of characters:</label>
+  <select id="character-count">
+    <option value="6" selected>6</option>
+    <option value="12">12</option>
+    <option value="18">18</option>
+    <option value="24">24</option>
+    <option value="32">32</option>
+    <option value="48">48</option>
+    <option value="64">64</option>
+  </select>
+  <div style="margin-top: 10px; text-align: left;">
+  <label style="display: inline-flex; align-items: center; justify-content: flex-start;">
+    <input type="checkbox" id="auto-hide" style="margin-right: 5px;"> Auto Hide
+  </label>
+</div>
+
+      
+  <!-- Start game button -->
+  <button onclick="startGame()">Start Game</button>
+
+  <div id="game-area" style="margin-top: 20px;">
+    <!-- Characters or game content will be dynamically displayed here -->
+  </div>
+
+    <p id="timer-output">Time elapsed: 0s</p>
+    <p id="question-count">Questions asked: 0</p>    
+  <!-- Question input for yes/no questions -->
+  <div id="question-area" style="margin-top: 20px; display: none;">
+    <label for="question">Ask a yes/no question:</label>
+    <input id="question" type="text" style="width: 100%;" placeholder="wear glasses">
+    <button id="hide-button" onclick="openCharacterList()">Hide</button>
+    <button onclick="answerQuestion()">Submit Question</button>
+    <p id="answer-output"></p>
+  </div>
+  
+    <!-- Modal window for the character list -->
+    <div id="character-modal" style="display: none; position: fixed; top: 0; left: 0; width: 100%; height: 100%; background: rgba(0, 0, 0, 0.5);">
+      <div style="position: relative; margin: 10% auto; padding: 20px; background: white; width: 50%;">
+        <h3>Select characters to hide</h3>
+        <form id="character-form">
+          <!-- List generated dynamically with JavaScript -->
+        </form>
+        <button onclick="hideSelectedCharacters()">Hide Selected</button>
+        <button onclick="closeCharacterList()">Close</button>
+      </div>
+    </div>
+
+  <script>
+      const nameGenderMap = {
+      James: ["male", "other"],
+      Mary: ["female", "other"],
+      John: ["male", "other"],
+      Linda: ["female", "other"],
+      Robert: ["male", "other"],
+      Patricia: ["female", "other"],
+      Michael: ["male", "other"],
+      Barbara: ["female", "other"],
+      William: ["male", "other"],
+      Susan: ["female", "other"],
+      David: ["male", "other"],
+      Jessica: ["female", "other"],
+      Richard: ["male", "other"],
+      Sarah: ["female", "other"],
+      Charles: ["male", "other"],
+      Karen: ["female", "other"],
+      Thomas: ["male", "other"],
+      Nancy: ["female", "other"],
+      Christopher: ["male", "other"],
+      Lisa: ["female", "other"],
+      Daniel: ["male", "other"],
+      Margaret: ["female", "other"],
+      Matthew: ["male", "other"],
+      Emily: ["female", "other"],
+      Anthony: ["male", "other"],
+      Ashley: ["female", "other"],
+      Mark: ["male", "other"],
+      Emma: ["female", "other"],
+      Paul: ["male", "other"],
+      Stephanie: ["female", "other"],
+      Andrew: ["male", "other"],
+      Jennifer: ["female", "other"],
+      Joshua: ["male", "other"],
+      Amy: ["female", "other"],
+      Kevin: ["male", "other"],
+      Laura: ["female", "other"],
+      Steven: ["male", "other"],
+      Katherine: ["female", "other"],
+      Brian: ["male", "other"],
+      Rachel: ["female", "other"],
+      George: ["male", "other"],
+      Abigail: ["female", "other"],
+      Edward: ["male", "other"],
+      Hannah: ["female", "other"],
+      Timothy: ["male", "other"],
+      Grace: ["female", "other"],
+      Jason: ["male", "other"],
+      Chloe: ["female", "other"],
+      Justin: ["male", "other"],
+      Samantha: ["female", "other"],
+      Eric: ["male", "other"],
+      Olivia: ["female", "other"],
+      Alexander: ["male", "other"],
+      Megan: ["female", "other"],
+      Stephen: ["male", "other"],
+      Victoria: ["female", "other"],
+      Benjamin: ["male", "other"],
+      Natalie: ["female", "other"],
+      Nathan: ["male", "other"],
+      Gabrielle: ["female", "other"],
+      Samuel: ["male", "other"],
+      Ella: ["female", "other"],
+      Patrick: ["male", "other"],
+      Isabella: ["female", "other"]
+    };
+
+  
+    const options = {
+      hairStyle: ["short", "long", "curly", "straight"],
+      hairColor: ["blonde", "brown", "black", "red"],
+      glasses: ["regular", "sunglasses", "none"],
+      hat: ["cap", "fedora", "beanie", "none"],
+      beardMustache: [["beard"], ["mustache"], ["beard, mustache"], ["none"]],
+      nose: ["big", "small", "narrow", "wide"],
+      eyeColor: ["blue", "brown", "green", "hazel"],
+      eyeShape: ["round", "almond", "large", "small"],
+      skinColor: ["light", "dark", "olive", "brown"],
+      outfit: ["t-shirt", "jacket", "sweater", "shirt"],
+      collar: ["high", "low", "open"],
+      jewelry: [["necklace"], ["bracelet"], ["necklace, bracelet"], ["none"]],
+      nails: ["painted", "natural"],
+      expression: ["smiling", "serious", "thoughtful", "raised eyebrows"],
+      profession: ["doctor\u2019s coat", "artist\u2019s tools", "sportswear", "helmet"],
+      accessories: [["handbag"], ["backpack"], ["handbag", "backpack"], ["none"]],
+    };
+
+    const names = [
+      "James", "Mary", "John", "Linda", "Robert", "Patricia", "Michael", "Barbara",
+      "William", "Susan", "David", "Jessica", "Richard", "Sarah", "Charles", "Karen",
+      "Thomas", "Nancy", "Christopher", "Lisa", "Daniel", "Margaret", "Matthew", "Emily",
+      "Anthony", "Ashley", "Mark", "Emma", "Paul", "Stephanie", "Andrew", "Jennifer",
+      "Joshua", "Amy", "Kevin", "Laura", "Steven", "Katherine", "Brian", "Rachel",
+      "George", "Abigail", "Edward", "Hannah", "Timothy", "Grace", "Jason", "Chloe",
+      "Justin", "Samantha", "Eric", "Olivia", "Alexander", "Megan", "Stephen", "Victoria",
+      "Benjamin", "Natalie", "Nathan", "Gabrielle", "Samuel", "Ella", "Patrick", "Isabella"
+    ];
+
+
+    let characters = [];
+    let targetCharacter = null;
+    let previousAnswer = null; // Initialize variable to store the previous answer
+
+    function getRandomOption(optionArray) {
+      return optionArray[Math.floor(Math.random() * optionArray.length)];
+    }
+
+    function generateCharacters(count) {
+      const generated = [];
+      for (let i = 0; i < count; i++) {
+        const name = names[i];
+        const allowedGenders = nameGenderMap[name] || ["male", "female", "other"];
+        //const gender = getRandomOption(allowedGenders);
+        let gender = getGenderWithDistribution();
+
+        // Ensure the assigned gender exists in the allowed genders for this name
+        if (!allowedGenders.includes(gender)) {
+            gender = getRandomOption(allowedGenders); 
+        }
+
+        generated.push({
+          index: i + 1,
+          name: name,
+          gender: gender,
+          hair: getRandomOption(options.hairStyle) + " (" + getRandomOption(options.hairColor) + ")",
+          glasses: getRandomOption(options.glasses) || "none", 
+          hat: getRandomOption(options.hat) || "none",
+          beardMustache: getRandomOption(options.beardMustache).join(", ") || "none",
+          nose: getRandomOption(options.nose) || "unknown",
+          eyes: getRandomOption(options.eyeShape) + " (" + getRandomOption(options.eyeColor) + ")" || "unknown",
+          skin: getRandomOption(options.skinColor) || "unknown",
+          outfit: getRandomOption(options.outfit) + " (Collar: " + getRandomOption(options.collar) + ")",
+          jewelry: getRandomOption(options.jewelry).join(", ") || "None",
+          nails: getRandomOption(options.nails) || "natural",
+          expression: getRandomOption(options.expression) || "neutral",
+          profession: getRandomOption(options.profession) || "unknown",
+          accessories: getRandomOption(options.accessories).join(", ") || "none",
+          marked: false,
+          hidden: false
+        });
+      }
+      return generated;
+    }
+
+    function getGenderWithDistribution() {
+      const random = Math.random();
+      if (random < 0.45) {
+        return "male";
+      } else if (random < 0.85) {
+        return "female";
+      } else {
+        return "other";
+      }
+    }
+
+    function startGame() {
+      const selectedCount = parseInt(document.getElementById("character-count").value, 10);
+      characters = generateCharacters(selectedCount);
+
+      targetCharacter = characters[Math.floor(Math.random() * characters.length)];
+      if (debugMode) {  console.log("Target Character:", targetCharacter); }
+
+      document.getElementById("question-area").style.display = "block";
+      displayCharacters(characters);
+      if (gameRunning) { stopTimer(); }
+      questionCount = 0;
+      gameRunning = 0;
+    }
+
+function detectLogicalOperator(question) {
+    switch (true) {
+        case question.includes(" and "):
+            return "and";
+        case question.includes(" or "):
+            return "or";
+        case question.includes("not "):
+            return "not";
+        default:
+            return null; // No logical operator detected
+    }
+}
+
+function parseConditions(question, logicalOperator) {
+    switch (logicalOperator) {
+        case "and":
+        case "or":
+            return question.split(` ${logicalOperator} `).map(cond => cond.trim());
+        case "not":
+            return [question.replace("not ", "").trim()];
+        default:
+            return [question]; // Single condition
+    }
+}
+
+function calculateFinalResult(results, logicalOperator) {
+    switch (logicalOperator) {
+        case "and":
+            return results.every(res => res === true); // All must match
+        case "or":
+            return results.some(res => res === true); // At least one matches
+        case "not":
+            return !results[0]; // Negation
+        default:
+            return results[0]; // Single condition
+    }
+}
+
+let questionCount = 0; // To track the number of questions
+let startTime; // To track when the game started
+let timerInterval; // To manage the timer
+let gameRunning = 0;
+
+// Function to start the timer
+function startTimer() {
+    startTime = new Date(); // Store the start time
+    timerInterval = setInterval(updateTimer, 1000); // Update timer every second
+}
+
+// Function to update the timer
+function updateTimer() {
+    const currentTime = new Date();
+    const elapsedTime = Math.floor((currentTime - startTime) / 1000); // Time elapsed in seconds
+    document.getElementById('timer-output').textContent = `Time elapsed: ${elapsedTime}s`;
+}
+
+// Function to stop the timer
+function stopTimer() {
+    clearInterval(timerInterval); // Stops the timer
+}
+
+// The main function to handle question submission
+function answerQuestion() {
+    const question = document.getElementById("question").value.toLowerCase();
+    const output = document.getElementById("answer-output");
+
+    if (debugMode) {  console.log("Received question:", question); }
+
+    const logicalOperator = detectLogicalOperator(question);
+    if (debugMode) {  console.log("Detected logical operator:", logicalOperator); }
+
+    const conditions = parseConditions(question, logicalOperator);
+    if (debugMode) {  console.log("Parsed conditions:", conditions); }
+
+    const results = conditions.map(cond => evaluateCondition(cond));
+    if (debugMode) {  console.log("Condition results for target:", results); }
+    
+    // Increment the question count
+    questionCount++;
+    document.getElementById("question-count").textContent = `Questions asked: ${questionCount}`;
+    
+    if (!gameRunning) {
+        if (debugMode) {  console.log("answerQuestion : timerInterval empty"); }
+        gameRunning = 1;
+        questionCount = 0;
+        startTimer(); // Call the timer start function here
+    }
+
+    const finalResult = calculateFinalResult(results, logicalOperator);
+    previousAnswer = finalResult ? "Yes" : "No";
+    if (debugMode) {  console.log("Final result for target character:", finalResult); }
+
+    if (question.startsWith("name ")) {
+        if (finalResult) {
+            // Only end the game if the name condition is correct
+            stopTimer();
+            const elapsedTime = Math.floor((new Date() - startTime) / 1000); // Calculate total time elapsed
+            output.textContent = `Yes! Congratulations! You solved it in ${elapsedTime}s with ${questionCount} questions.`;
+            if (debugMode) {  console.log("Game over. Timer stopped. Player guessed correctly."); }
+            questionCount = 0;
+            gameRunning = 0;
+        } else {
+            // Output for incorrect name question
+            output.textContent = "No";
+        }
+    } else {
+        // Handle non-name questions normally
+        if (finalResult) {
+            output.textContent = "Yes";
+            const autoHide = document.getElementById("auto-hide").checked;
+            if (autoHide) {
+                markCharacters(conditions, logicalOperator, true); // Lis?? true merkitsem??n Auto Hide -k?ytt?
+                displayCharacters(characters); 
+                if (debugMode) {  console.log("answerQuestion : autoHide"); }
+            }
+        } else {
+            output.textContent = "No";
+        }
+    }
+
+    // Pass conditions and operator to markCharacters
+    markCharacters(conditions, logicalOperator);
+    displayCharacters(characters); // Update displayed characters
+    if (debugMode) {  console.log("Characters displayed after marking.");  }
+}
+
+
+function processCondition(conditionKey, target) {
+    switch (true) {
+        // Name-specific condition
+        case conditionKey.includes("name"):
+            const cleanedName = target.name.toLowerCase().trim();
+            const desiredName = conditionKey.split(" ")[1]?.toLowerCase().trim();
+            if (debugMode) {  console.log(`Comparing target name "${cleanedName}" with condition name "${desiredName}"`); }
+            return cleanedName === desiredName;
+        
+        // Gender-specific condition
+        case conditionKey.includes("gender") || conditionKey.includes("female") || conditionKey.includes("male") || conditionKey.includes("other"):
+            const desiredGender = conditionKey.replace("gender:", "").trim().toLowerCase(); // Remove 'gender:' if present
+            const targetGender = target.gender.toLowerCase().trim(); // Normalize target gender
+            if (debugMode) { console.log(`Comparing target gender "${targetGender}" with condition gender "${desiredGender}"`);  }
+            return targetGender === desiredGender;
+        
+        // Hiukset
+        case conditionKey.includes("hair:"):
+            const hairTraits = conditionKey.split(/\sor\s|\sand\s/) 
+                .filter(cond => cond.startsWith("hair:"))
+                .map(cond => cond.replace("hair:", "").trim().toLowerCase());
+
+            const cleanedHair = target.hair.toLowerCase().replace(/[()]/g, "").trim();
+            return hairTraits.some(trait => cleanedHair.includes(trait));
+
+
+
+        // Silm孡sit
+        case conditionKey.includes("glasses") && conditionKey.includes("regular"):
+            return target.glasses === "regular";
+        case conditionKey.includes("glasses") && conditionKey.includes("sunglasses"):
+            return target.glasses === "sunglasses";
+        case conditionKey.includes("glasses") && conditionKey.includes("none"):
+            return target.glasses === "none";
+            
+        // Nen嵹ypit
+        case conditionKey.includes("nose") && conditionKey.includes("big"):
+            return target.nose.toLowerCase().includes("big");
+        case conditionKey.includes("nose") && conditionKey.includes("small"):
+            return target.nose.toLowerCase().includes("small");
+        case conditionKey.includes("nose") && conditionKey.includes("narrow"):
+            return target.nose.toLowerCase().includes("narrow");
+        case conditionKey.includes("nose") && conditionKey.includes("wide"):
+            return target.nose.toLowerCase().includes("wide");
+            
+        // Silm崍
+         case conditionKey.includes("eyes:"):
+            const eyesTraits = conditionKey.split(/\sor\s|\sand\s/) 
+                .filter(cond => cond.startsWith("eyes:")) 
+                .map(cond => cond.replace("eyes:", "").trim().toLowerCase());
+
+            const cleanedEyes = target.eyes.toLowerCase().replace(/[()]/g, "").trim(); 
+            return eyesTraits.some(trait => cleanedEyes.includes(trait));
+
+
+        // Iho
+        case conditionKey.includes("skin") && conditionKey.includes("light"):
+            return target.skin.toLowerCase().includes("light");
+        case conditionKey.includes("skin") && conditionKey.includes("dark"):
+            return target.skin.toLowerCase().includes("dark");
+        case conditionKey.includes("skin") && conditionKey.includes("olive"):
+            return target.skin.toLowerCase().includes("olive");
+        case conditionKey.includes("skin") && conditionKey.includes("brown"):
+            return target.skin.toLowerCase().includes("brown");
+
+         // Kynnet
+         case conditionKey.includes("nails") && conditionKey.includes("painted"):
+            return target.nails.toLowerCase().includes("painted");
+        case conditionKey.includes("nails") && conditionKey.includes("natural"):
+            return target.nails.toLowerCase().includes("natural");
+            
+         // Parta tai viikset
+        case conditionKey.includes("beard"):
+            return target.beardMustache.toLowerCase().includes("beard");
+        case conditionKey.includes("mustache"):
+            return target.beardMustache.toLowerCase().includes("mustache");
+        case conditionKey.includes("beard") && conditionKey.includes("mustache"):
+            return target.beardMustache.includes("beard") && target.beardMustache.includes("mustache");   
+        case conditionKey.includes("beardMustache") && conditionKey.includes("none"):
+            return target.beardMustache === "none";
+            
+       // Hattu
+        case conditionKey.includes("hat") && conditionKey.includes("cap"):
+            return target.hat === "cap";
+        case conditionKey.includes("hat") && conditionKey.includes("fedora"):
+            return target.hat === "fedora";
+        case conditionKey.includes("hat") && conditionKey.includes("beanie"):
+            return target.hat === "beanie";
+        case conditionKey.includes("hat") && conditionKey.includes("none"):
+            return target.hat === "none";            
+
+        // Vaatteet
+        case conditionKey.includes("outfit:") || conditionKey.includes("collar:"):
+            const outfitConditions = conditionKey.split(" and ")
+                .map(cond => cond.replace("outfit:", "").replace("collar:", "").trim().toLowerCase()); // Poistetaan "outfit:" ja "collar:"
+
+            const cleanedOutfit = target.outfit.toLowerCase().replace(/[()]/g, "").trim(); // Normalisoidaan outfit-data
+            return outfitConditions.every(trait => cleanedOutfit.includes(trait));
+
+
+        // Korut
+        case conditionKey.includes("necklace"):
+            return target.jewelry.toLowerCase().includes("necklace");
+        case conditionKey.includes("bracelet"):
+            return target.jewelry.toLowerCase().includes("bracelet");
+        case conditionKey.includes("necklace") && conditionKey.includes("bracelet"):
+            return target.jewelry.toLowerCase().includes("necklace") && target.jewelry.toLowerCase().includes("bracelet");
+        case conditionKey.includes("jewelry") && conditionKey.includes("none"):
+            return target.jewelry.toLowerCase() === "none";
+
+        // Ammatti
+        case conditionKey.includes("profession"):
+            const professionTraits = conditionKey.replace("profession:", "").toLowerCase().split(" and ").map(trait => trait.trim());
+            const cleanedProfession = target.profession.toLowerCase().trim(); // Normalize target data
+            return professionTraits.every(trait => cleanedProfession.includes(trait));
+        
+        // Laukku
+       case conditionKey.includes("accessories:"):
+            const accessoriesTraits = conditionKey.split(" and ")
+                .filter(cond => cond.includes("accessories:")) // Select only traits related to accessories
+                .map(cond => cond.replace("accessories:", "").trim().toLowerCase()); // Extract and normalize traits
+            return accessoriesTraits.every(trait => target.accessories.includes(trait));
+
+        // Oletusarvo
+        default:
+            return false; // Tuntematon ehto
+    }
+}
+
+
+function evaluateCondition(condition) {
+    const conditionKey = condition.toLowerCase().trim();
+    return processCondition(conditionKey, targetCharacter); // K?ytt?? targetCharacteria
+}
+
+function evaluateCharacterCondition(character, condition) {
+    const conditionKey = condition.toLowerCase().trim();
+    return processCondition(conditionKey, character); // K?ytt?? yksitt?ist? hahmoa
+}
+
+function markCharacters(conditions, logicalOperator, autoHide = false) {
+    if (debugMode) { console.log("Conditions passed to markCharacters:", conditions); }
+    if (debugMode) { console.log("Logical operator:", logicalOperator); }
+
+    characters.forEach(character => {
+        const conditionResults = conditions.map(cond => evaluateCharacterCondition(character, cond));
+        if (debugMode) { console.log(`Evaluating ${character.name} with conditions:`, conditionResults); }
+
+        // Determine if character satisfies the logical conditions
+        const shouldBeMarked = evaluateLogicalOperator(conditionResults, logicalOperator);
+        
+        if (autoHide) {
+            // Hide characters that don't meet the condition
+            character.hidden = !shouldBeMarked;
+            if (debugMode) {
+                console.log(`${!shouldBeMarked ? "Hiding" : "Keeping visible"} ${character.name}`);
+            }
+        } else {
+            // Only mark characters without hiding them
+            character.marked = shouldBeMarked;
+            if (debugMode) {
+                console.log(`${shouldBeMarked ? "Marked" : "Unmarked"} ${character.name}`);
+            }
+        }
+    });
+
+    // Debug log for hidden or marked characters
+    if (debugMode) { 
+        console.log("Marked characters:", characters.filter(character => character.marked));
+        if (autoHide) {
+            console.log("Hidden characters:", characters.filter(character => character.hidden));
+        }
+    }
+}
+
+function markCharacter(characterId) {
+    // Reset all characters' marked status first
+    characters.forEach(char => char.marked = false);
+
+    // Mark the selected character
+    const character = characters.find(char => char.index === characterId);
+    if (character) {
+        character.marked = true; // Apply the marking
+        displayCharacters(characters); // Refresh UI
+        if (debugMode) { console.log(`Marked character:`, character);  }
+    }
+}
+
+
+// Helper function to evaluate logical operator
+function evaluateLogicalOperator(results, logicalOperator) {
+    switch (logicalOperator) {
+        case "and":
+            return results.every(res => res === true); // All conditions must match
+        case "or":
+            console.log("Using some():", results.some(res => res === true));
+            return results.some(res => res === true); // At least one condition matches
+        case "not":
+            return !results[0]; // Negation for a single condition
+        default:
+            return results[0]; // Single condition or no operator
+    }
+}
+
+
+function hideSelectedCharacters() {
+    // Gather all checkboxes in the form
+    const checkboxes = Array.from(document.querySelectorAll('input[name="character"]'));
+
+    checkboxes.forEach(input => {
+        const index = parseInt(input.value); // Get the character index from checkbox value
+        if (input.checked) {
+            // Mark as hidden if checkbox is checked
+            characters[index].hidden = true;
+        } else {
+            // Remove hidden status if checkbox is unchecked
+            characters[index].hidden = false;
+        }
+    });
+
+    // Update the UI and close the modal
+    closeCharacterList(); // Close the modal
+    displayCharacters(characters); // Refresh the visible characters
+}
+
+
+function closeCharacterList() {
+    const modal = document.getElementById("character-modal");
+    modal.style.display = "none"; // Piilota modal
+}
+
+
+
+
+function addToQuestion(text, event) {
+    if (event) event.stopPropagation(); // Est夠tapahtuman levi宩sen yl��in
+
+    const questionField = document.getElementById("question");
+    const currentQuestion = questionField.value.toLowerCase();
+
+    if (debugMode) { console.log("Initial question field:", currentQuestion); }
+    if (debugMode) { console.log("New text to add:", text); }
+
+    const parsedConditions = [text.toLowerCase()]; // K崩tell奮 vain annettu teksti ilman sulkuja
+
+    if (debugMode) { console.log("Parsed conditions:", parsedConditions); }
+
+    if (previousAnswer === "No") {
+        questionField.value = parsedConditions.join(" and "); // Korvaa aiemman kysymyksen
+        if (debugMode) { console.log("Previous answer was 'No'. Overwriting question field:", questionField.value); }
+    } else {
+        parsedConditions.forEach(condition => {
+            if (!currentQuestion.includes(condition)) {
+                if (questionField.value) {
+                    questionField.value += ` and ${condition}`; // Lis夠ehdon olemassa olevaan kysymykseen
+                } else {
+                    questionField.value = condition;
+                }
+            }
+        });
+
+        if (debugMode) { console.log("Final question field after appending:", questionField.value); }
+    }
+}
+
+
+function displayCharacters(characterList) {
+    const characterListDiv = document.getElementById("game-area");
+
+    // Filter out hidden characters
+    const visibleCharacters = characterList.filter(character => !character.hidden);
+
+    characterListDiv.innerHTML = visibleCharacters.map(character => {
+        const priorityFields = [
+            { key: "gender", label: "Gender" },
+            { key: "eyes", label: "Eyes" },
+            { key: "hair", label: "Hair" },
+            { key: "nose", label: "Nose" },
+            { key: "skin", label: "Skin" },
+            { key: "glasses", label: "Glasses" },
+            { key: "beardMustache", label: "Beard/Mustache" },
+            { key: "nails", label: "Nails" },
+            { key: "expression", label: "Expression" },
+            { key: "hat", label: "Hat" },
+            { key: "outfit", label: "Outfit" }
+        ];
+
+        const priorityFieldsHTML = priorityFields
+            .map(({ key, label }) => {
+                if (character[key] !== undefined) {
+                    if (key === "eyes" || key === "hair") {
+                        const [trait1, trait2] = character[key].replace(/[()]/g, "").split(" ");
+                        return `
+                            <span class="trait" onclick="addToQuestion('${label.toLowerCase()}: ${trait1}')">${label}: ${trait1}</span>
+                            (<span class="trait" onclick="addToQuestion('${label.toLowerCase()}: ${trait2}')">${trait2}</span>)
+                        `;
+                    } else if (key === "outfit") {
+                        const outfitParts = character[key].split(" (Collar: "); // Erota vaatetyyli ja kaulus
+
+                        if (outfitParts.length === 2) {
+                            const clothing = outfitParts[0].trim();
+                            const collar = outfitParts[1].replace(")", "").trim();
+
+                            return `
+                                <span class="trait" onclick="addToQuestion('outfit: ${clothing}')">Outfit: ${clothing}</span>
+                                <span class="trait" onclick="addToQuestion('collar: ${collar}')">Collar: ${collar}</span>
+                            `;
+                        }
+                    } else {
+                        return `<span class="trait" onclick="addToQuestion('${label.toLowerCase()}: ${character[key]}')">${label}: ${character[key]}</span>`;
+                    }
+                }
+                return null;
+            })
+            .filter(field => field !== null)
+            .join(", ");
+
+        const otherFieldsHTML = Object.keys(character)
+            .filter(key => !priorityFields.map(f => f.key).includes(key) && !["index", "name", "hidden", "marked"].includes(key))
+            .map(key => `
+                <span class="trait" onclick="addToQuestion('${key.charAt(0).toUpperCase() + key.slice(1).toLowerCase()}: ${character[key]}')">
+                    ${key.charAt(0).toUpperCase() + key.slice(1)}: ${character[key]}
+                </span>
+            `)
+            .join(", ");
+
+        const characterClass = character.marked ? "marked" : "";
+
+        return `
+            <div id="character-${character.index}" class="character ${characterClass}" onclick="markCharacter(${character.index})">
+                <strong>${character.index}. ${character.name}</strong>: ${priorityFieldsHTML}${otherFieldsHTML ? `, ${otherFieldsHTML}` : ""}
+            </div>
+        `;
+    }).join("");
+}
+
+
+function openCharacterList() {
+    const modal = document.getElementById("character-modal");
+    const form = document.getElementById("character-form");
+
+    modal.style.display = "block"; // Show the modal
+
+    // Populate the form with character checkboxes, indicating hidden ones
+    form.innerHTML = characters.map((character, index) => {
+        return `
+            <div>
+                <label>
+                    <input type="checkbox" value="${index}" name="character" ${character.hidden ? "checked" : ""}>
+                    ${character.name} ${character.hidden ? "(Hidden)" : ""}
+                </label>
+            </div>
+        `;
+    }).join('');
+}
+
+  </script>
+</body>
+</html>
