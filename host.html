@@ -21,15 +21,20 @@
                 headers: {
                     'Content-Type': 'application/json',
                 },
-                body: JSON.stringify({}) // Ei ylimääräisiä tietoja tässä vaiheessa
+                body: JSON.stringify({}) // Ei tarvita lisätietoja
             })
             .then(response => response.json())
             .then(data => {
-                roomCode = data.roomCode;
-                document.getElementById('roomCode').innerText = `Room Code: ${roomCode}`;
+                if (data.success) {
+                    const roomCode = data.roomCode;
+                    document.getElementById('roomCode').innerText = `Room Code: ${roomCode}`;
+                } else {
+                    alert('Failed to create room.');
+                }
             })
             .catch(error => console.error('Error creating room:', error));
         }
+
 
 
         function updatePlayerList(players) {
