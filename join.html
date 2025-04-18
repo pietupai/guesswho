@@ -106,7 +106,8 @@
                 alert('Please write a message before sending.');
                 return;
             }
-        
+
+            console.log(`sendMessage : ${playerName} ${message}`);
             socket.emit('chatMessage', { roomCode, senderName: playerName, message });
             document.getElementById('chatInput').value = ''; // Clear input field
         }
