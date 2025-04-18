@@ -8,7 +8,7 @@ function createRoom() {
     // Voit lisätä huonekoodin tallennuksen backend-palvelimeen, kuten Renderiin
 }
 
-fetch('https://your-render-app.onrender.com/create-room', {
+fetch('https://guesswho-backend.onrender.com', {
     method: 'POST',
     headers: {
         'Content-Type': 'application/json',
