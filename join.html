@@ -13,11 +13,11 @@
             fetch('https://guesswho-backend.onrender.com/latest-room')
             .then(response => response.json())
             .then(data => {
-                console.log('API response:', data); // Debug backend response
-                const roomCodeElement = document.getElementById('roomCode');
-                console.log('Room Code Element:', roomCodeElement); // Debug element
+                const roomCodeElement = document.getElementById('roomCode'); // Get the room code element
                 if (data.success) {
-                    roomCodeElement.textContent = `Room Code: ${data.roomCode}`;
+                    roomCodeElement.textContent = `Room Code: ${data.roomCode}`; // Display the room code
+                    roomCodeElement.style.display = 'block'; // Make the room code visible
+                    console.log(`Fetched room code: ${data.roomCode}`);
                 } else {
                     alert(data.message || 'Failed to fetch room code.');
                 }
