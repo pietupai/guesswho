@@ -83,6 +83,19 @@
                 .catch(error => console.error('Error fetching player list:', error));
         }
 
+        function updatePlayerList(players) {
+            const playerListElement = document.getElementById('playerList'); // Fetch the player list element
+            playerListElement.innerHTML = ''; // Clear the existing list
+        
+            players.forEach(player => {
+                const li = document.createElement('li'); // Create a new list item
+                li.textContent = player; // Add the player's name to the list item
+                playerListElement.appendChild(li); // Append the list item to the player list
+            });
+        
+            console.log('Updated player list:', players); // Log the updated list for debugging
+        }
+
         socket.on('playerJoined', (players) => {
             console.log(`socket.on playerJoined : ${players}`);
             const playerListElement = document.getElementById('playerList');
