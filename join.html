@@ -171,19 +171,26 @@
 
         function fetchMessages() {
             const roomCode = document.getElementById('roomCode').value.trim();
+        
             if (!roomCode) {
                 console.error('Room code is missing.');
-                return;
+                return; // Lopetetaan, jos huonekoodi puuttuu
             }
+        
             fetch(`https://guesswho-backend.onrender.com/get-messages/${roomCode}`)
-            .then(response => response.json())
+            .then(response => {
+                if (!response.ok) {
+                    throw new Error(`HTTP error! status: ${response.status}`);
+                }
+                return response.json();
+            })
             .then(data => {
                 if (data.success) {
                     const messagesDiv = document.getElementById('messages');
                     messagesDiv.innerHTML = '';
                     data.messages.forEach(msg => {
                         const p = document.createElement('p');
-                        p.textContent = msg;
+                        p.textContent = `${msg.senderName}: ${msg.message}`; // Näytetään nimi ja viesti
                         messagesDiv.appendChild(p);
                     });
                     messagesDiv.scrollTop = messagesDiv.scrollHeight;
