@@ -4,9 +4,30 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Host Game</title>
+    <style>
+        body {
+            font-family: Arial, sans-serif;
+            text-align: center;
+            padding: 20px;
+        }
+        button {
+            margin: 10px;
+            padding: 10px;
+            font-size: 16px;
+            width: 80%;
+        }
+        ul {
+            list-style-type: none;
+            padding: 0;
+        }
+        li {
+            font-size: 18px;
+            margin: 5px 0;
+        }
+    </style>
 </head>
 <body>
-    <h1>Test Host Page</h1>
+    <h1>Host a Game</h1>
     <button onclick="createRoom()">Create Room</button>
     <p id="roomCode"></p>
     <h2>Players:</h2>
@@ -15,19 +36,21 @@
         let roomCode = '';
         const playerListElement = document.getElementById('playerList');
 
+        // Funktion huoneen luomiseksi
         function createRoom() {
             fetch('https://guesswho-backend.onrender.com/create-room', {
                 method: 'POST',
                 headers: {
                     'Content-Type': 'application/json',
                 },
-                body: JSON.stringify({}) // Ei tarvita lisätietoja
+                body: JSON.stringify({})
             })
             .then(response => response.json())
             .then(data => {
                 if (data.success) {
-                    const roomCode = data.roomCode;
+                    roomCode = data.roomCode; // Talletetaan huonekoodi
                     document.getElementById('roomCode').innerText = `Room Code: ${roomCode}`;
+                    startPlayerPolling(); // Aloitetaan pelaajien listan päivitys
                 } else {
                     alert('Failed to create room.');
                 }
@@ -35,10 +58,9 @@
             .catch(error => console.error('Error creating room:', error));
         }
 
-
-
+        // Päivittää pelaajalistan
         function updatePlayerList(players) {
-            playerListElement.innerHTML = ''; // Tyhjennä lista ensin
+            playerListElement.innerHTML = ''; // Tyhjennetään lista ennen päivitystä
             players.forEach(player => {
                 const li = document.createElement('li');
                 li.textContent = player;
@@ -46,19 +68,20 @@
             });
         }
 
-        function pollPlayers() {
+        // Hakee pelaajalistan backendistä
+        function startPlayerPolling() {
             setInterval(() => {
                 fetch(`https://guesswho-backend.onrender.com/room/${roomCode}`)
                 .then(response => response.json())
                 .then(data => {
                     if (data.success) {
-                        updatePlayerList(data.players);
+                        updatePlayerList(data.players); // Päivittää liittyneet pelaajat
                     } else {
                         console.error('Failed to fetch player list:', data.message);
                     }
                 })
                 .catch(error => console.error('Error polling players:', error));
-            }, 3000); // Päivitä lista 3 sekunnin välein
+            }, 3000); // Päivitetään lista 3 sekunnin välein
         }
     </script>
 </body>
