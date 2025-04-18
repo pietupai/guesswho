@@ -65,14 +65,20 @@
         }
 
         socket.on('playerJoined', (players) => {
-            const playerList = document.getElementById('playerList');
-            playerList.innerHTML = ''; // Clear the list before updating
+            const playerListElement = document.getElementById('playerList'); // Get the player list element
+            const playerTitle = document.querySelector('#playersTitle'); // Add this for the "Players:" title
+            playerListElement.innerHTML = ''; // Clear the list
             players.forEach(player => {
                 const li = document.createElement('li');
-                li.textContent = player;
-                playerList.appendChild(li);
+                li.textContent = player; // Add player to the list
+                playerListElement.appendChild(li);
             });
-            console.log(`Updated player list: ${players}`);
+            
+            // Make the "Players:" title visible if players exist
+            if (players.length > 0) {
+                playerTitle.style.display = 'block'; 
+            }
+            console.log(`Updated players list: ${players}`);
         });
 
         window.onload = fetchRoomCode; // Fetch room code when page loads
@@ -88,7 +94,8 @@
     <h2>Room Code:</h2>
     <p id="roomCode"></p> <!-- Displays the room code as text -->
 
-    <h2>Players in the Room:</h2>
-    <ul id="playerList"></ul> <!-- Displays the player list dynamically -->
+    <h2 id="playersTitle" style="display: none;">Players:</h2> <!-- Hidden by default -->
+    <ul id="playerList"></ul> <!-- Dynamically updated player list -->
+
 </body>
 </html>
