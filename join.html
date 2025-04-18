@@ -4,19 +4,19 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Join a Room</title>
-    <link rel="stylesheet" href="join.css"> <!-- Link to external CSS -->
+    <link rel="stylesheet" href="join.css"> <!-- External CSS file -->
     <script src="https://cdn.socket.io/4.3.2/socket.io.min.js"></script> <!-- Socket.IO -->
     <script defer>
-        const socket = io('https://guesswho-backend.onrender.com'); // Update backend URL if necessary
+        const socket = io('https://guesswho-backend.onrender.com'); // Replace with your backend URL
 
         function fetchRoomCode() {
             fetch('https://guesswho-backend.onrender.com/latest-room')
             .then(response => response.json())
             .then(data => {
-                const roomCodeElement = document.getElementById('roomCode'); // Get the room code element
+                const roomCodeElement = document.getElementById('roomCode');
                 if (data.success) {
-                    roomCodeElement.textContent = `Room Code: ${data.roomCode}`; // Display the room code
-                    roomCodeElement.style.display = 'block'; // Make the room code visible
+                    roomCodeElement.textContent = `Room Code: ${data.roomCode}`;
+                    roomCodeElement.style.display = 'block'; // Make room code visible
                     console.log(`Fetched room code: ${data.roomCode}`);
                 } else {
                     alert(data.message || 'Failed to fetch room code.');
@@ -28,9 +28,10 @@
         }
 
         function joinGame() {
+            const joinButton = document.querySelector('button[type="submit"]');
             const playerName = document.getElementById('playerName').value.trim();
             const roomCodeElement = document.getElementById('roomCode');
-            
+
             if (!playerName) {
                 alert('Please enter your name.');
                 return;
@@ -41,7 +42,9 @@
                 return;
             }
 
-            const roomCode = roomCodeElement.textContent.split(': ')[1]; // Extract actual room code
+            const roomCode = roomCodeElement.textContent.split(': ')[1]; // Extract room code
+
+            joinButton.style.display = 'none'; // Hide Join button on submission
             fetch('https://guesswho-backend.onrender.com/join-room', {
                 method: 'POST',
                 headers: {
@@ -54,29 +57,30 @@
                 if (data.success) {
                     alert(`Joined room: ${roomCode}`);
                     console.log(`Player ${playerName} joined room ${roomCode}`);
-                    socket.emit('joinRoom', roomCode); // Notify server via WebSocket
+                    socket.emit('joinRoom', roomCode); // Notify the server
                 } else {
                     alert(data.message || 'Failed to join the room.');
+                    joinButton.style.display = 'block'; // Show button again if joining fails
                 }
             })
             .catch(error => {
                 console.error('Error joining room:', error);
+                joinButton.style.display = 'block'; // Show button again on network error
             });
         }
 
         socket.on('playerJoined', (players) => {
-            const playerListElement = document.getElementById('playerList'); // Get the player list element
-            const playerTitle = document.querySelector('#playersTitle'); // Add this for the "Players:" title
-            playerListElement.innerHTML = ''; // Clear the list
+            const playerListElement = document.getElementById('playerList');
+            const playerTitle = document.querySelector('#playersTitle');
+            playerListElement.innerHTML = '';
             players.forEach(player => {
                 const li = document.createElement('li');
-                li.textContent = player; // Add player to the list
+                li.textContent = player;
                 playerListElement.appendChild(li);
             });
-            
-            // Make the "Players:" title visible if players exist
+
             if (players.length > 0) {
-                playerTitle.style.display = 'block'; 
+                playerTitle.style.display = 'block'; // Make the "Players:" title visible
             }
             console.log(`Updated players list: ${players}`);
         });
@@ -92,10 +96,9 @@
     </form>
 
     <h2>Room Code:</h2>
-    <p id="roomCode"></p> <!-- Displays the room code as text -->
+    <p id="roomCode"></p> <!-- Displays room code -->
 
-    <h2 id="playersTitle" style="display: none;">Players:</h2> <!-- Hidden by default -->
-    <ul id="playerList"></ul> <!-- Dynamically updated player list -->
-
+    <h2 id="playersTitle" style="display: none;">Players:</h2>
+    <ul id="playerList"></ul> <!-- Displays players dynamically -->
 </body>
 </html>
