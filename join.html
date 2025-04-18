@@ -14,7 +14,9 @@
             .then(response => response.json())
             .then(data => {
                 if (data.success) {
-                    document.getElementById('roomCode').value = data.roomCode;
+                    const roomCodeInput = document.getElementById('roomCode');
+                    roomCodeInput.value = data.roomCode;
+                    roomCodeInput.style.display = 'block'; // Näytä laatikko vain, kun huonekoodi on saatu
                     console.log(`Haettu huonekoodi: ${data.roomCode}`);
                 } else {
                     alert(data.message || 'Huonekoodin haku epäonnistui.');
@@ -24,6 +26,7 @@
                 console.error('Virhe huonekoodia haettaessa:', error);
             });
         }
+
 
         function joinGame() {
             const joinButton = document.querySelector('button[type="submit"]'); // Valitaan nappi
