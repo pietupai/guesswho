@@ -4,7 +4,7 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Liity huoneeseen</title>
-    <link rel="stylesheet" href="join.css"> <!-- Linkitys ulkoiseen CSS-tiedostoon -->
+    <link rel="stylesheet" href="join.css"> <!-- Ulkoinen CSS tiedosto -->
     <script src="https://cdn.socket.io/4.3.2/socket.io.min.js"></script> <!-- Socket.IO -->
     <script defer>
         const socket = io('https://guesswho-backend.onrender.com'); // Muuta backend-URL tarvittaessa
@@ -27,18 +27,20 @@
         }
 
         function joinGame() {
-            const joinButton = document.querySelector('button[type="submit"]'); // Valitaan nappi
-            joinButton.style.display = 'none'; // Piilotetaan nappi painamisen jälkeen
-        
             const playerName = document.getElementById('playerName').value.trim();
-            const roomCode = document.getElementById('roomCode').value.trim();
-        
+            const roomCodeElement = document.getElementById('roomCode');
+            
             if (!playerName) {
                 alert('Syötä nimesi.');
-                joinButton.style.display = 'block'; // Näytetään nappi takaisin, jos tulee virhe
                 return;
             }
-        
+
+            if (!roomCodeElement || !roomCodeElement.textContent.trim()) {
+                alert('Huonekoodia ei löytynyt.');
+                return;
+            }
+
+            const roomCode = roomCodeElement.textContent.split(': ')[1]; // Poimitaan pelkkä huonekoodi
             fetch('https://guesswho-backend.onrender.com/join-room', {
                 method: 'POST',
                 headers: {
@@ -51,15 +53,13 @@
                 if (data.success) {
                     alert(`Liitytty huoneeseen: ${roomCode}`);
                     console.log(`Pelaaja ${playerName} liittyi huoneeseen ${roomCode}`);
-                    socket.emit('joinRoom', roomCode);
+                    socket.emit('joinRoom', roomCode); // Ilmoita palvelimelle WebSocketilla
                 } else {
                     alert(data.message || 'Liittyminen epäonnistui.');
-                    joinButton.style.display = 'block'; // Näytetään nappi takaisin, jos liittyminen epäonnistuu
                 }
             })
             .catch(error => {
                 console.error('Virhe liityttäessä huoneeseen:', error);
-                joinButton.style.display = 'block'; // Näytetään nappi takaisin, jos tulee verkkovirhe
             });
         }
 
@@ -81,11 +81,13 @@
     <h1>Liity huoneeseen</h1>
     <form id="joinForm" onsubmit="joinGame(); return false;">
         <input type="text" id="playerName" placeholder="Syötä nimesi" required><br>
-        <p id="roomCode"></p><br>
         <button type="submit">Liity</button>
     </form>
 
+    <h2>Huonekoodi:</h2>
+    <p id="roomCode"></p> <!-- Näytetään huonekoodi tekstinä -->
+
     <h2>Pelaajat huoneessa:</h2>
-    <ul id="playerList"></ul> <!-- Dynaamisesti päivittyvä lista -->
+    <ul id="playerList"></ul> <!-- Pelaajalista, päivittyy WebSocketin avulla -->
 </body>
 </html>
