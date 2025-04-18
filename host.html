@@ -36,18 +36,18 @@
 
         function createRoom() {
             const hostName = document.getElementById('hostName').value.trim();
-
+        
             if (!hostName) {
                 alert('Please enter your name.');
                 return;
             }
-
+        
             fetch('https://guesswho-backend.onrender.com/create-room', {
                 method: 'POST',
                 headers: {
                     'Content-Type': 'application/json',
                 },
-                body: JSON.stringify({ hostName })
+                body: JSON.stringify({ hostName }),
             })
             .then(response => response.json())
             .then(data => {
@@ -56,16 +56,9 @@
                     document.getElementById('roomCode').innerText = `Room Code: ${roomCode}`;
                     document.getElementById('hostForm').style.display = 'none';
                     document.getElementById('startGameButton').style.display = 'block';
-
-                    // Liity WebSocket-huoneeseen
-                    socket.emit('joinRoom', roomCode);
-                    fetchPlayerList();
-
-                    // Kuuntele pelaajalistaa
-                    socket.on('playerJoined', (players) => {
-                        updatePlayerList(players);
-                    });
-
+        
+                    socket.emit('joinRoom', roomCode); // Join WebSocket room
+                    updatePlayerList([hostName]); // Immediately update player list with Host
                 } else {
                     alert('Failed to create room.');
                 }
@@ -133,9 +126,9 @@
         }
 
         socket.on('playerJoined', (players) => {
-            updatePlayerList(players); // Update list in real time
+            updatePlayerList(players); // Update player list dynamically
         });
-        
+
         socket.on('chatMessage', (data) => {
             const messagesElement = document.getElementById('messages');
             const p = document.createElement('p');
