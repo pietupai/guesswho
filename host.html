@@ -132,8 +132,11 @@
         socket.on('chatMessage', (data) => {
             const messagesElement = document.getElementById('messages');
             const p = document.createElement('p');
-            p.textContent = `${data.senderName}: ${data.message}`; // Display sender and message
+            p.textContent = `${data.senderName}: ${data.message}`;
             messagesElement.appendChild(p);
+        
+            // Auto-scroll to the bottom of the chat window
+            messagesElement.scrollTop = messagesElement.scrollHeight;
         });
         
         function sendMessage() {
