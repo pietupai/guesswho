@@ -98,6 +98,19 @@
             console.log('Updated player list:', players); // Log the updated list for debugging
         }
 
+        function sendMessage() {
+            const message = document.getElementById('chatInput').value.trim();
+            const playerName = document.getElementById('playerNameLabel').textContent.split(': ')[1]; // Get player's name
+        
+            if (!message) {
+                alert('Please write a message before sending.');
+                return;
+            }
+        
+            socket.emit('chatMessage', { roomCode, senderName: playerName, message });
+            document.getElementById('chatInput').value = ''; // Clear input field
+        }
+
         socket.on('playerJoined', (players) => {
             console.log(`socket.on playerJoined : ${players}`);
             const playerListElement = document.getElementById('playerList');
@@ -121,6 +134,12 @@
             document.getElementById('chatWindow').style.display = 'block'; // Show chat window
         });
 
+        socket.on('chatMessage', (data) => {
+            const messagesElement = document.getElementById('messages');
+            const p = document.createElement('p');
+            p.textContent = `${data.senderName}: ${data.message}`;
+            messagesElement.appendChild(p);
+        });
 
         window.onload = fetchRoomCode; // Fetch room code when page loads
     </script>
