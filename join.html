@@ -1,89 +1,42 @@
-<!DOCTYPE html>
-<html lang="en">
-<head>
-    <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Join Game</title>
-    <style>
-        body {
-            font-family: Arial, sans-serif;
-            text-align: center;
-            padding: 20px;
+function joinGame() {
+    const playerName = document.getElementById('playerName').value.trim();
+    const roomCode = document.getElementById('roomCode').value.trim();
+
+    if (!playerName) {
+        alert('Please enter your name.');
+        console.warn('Player name is missing.');
+        return;
+    }
+
+    // Estä uusi painallus ja piilota painike
+    const joinButton = document.querySelector('button');
+    joinButton.disabled = true;
+    joinButton.style.display = 'none';
+
+    fetch('https://guesswho-backend.onrender.com/join-room', {
+        method: 'POST',
+        headers: {
+            'Content-Type': 'application/json',
+        },
+        body: JSON.stringify({ roomCode, playerName }),
+    })
+    .then(response => response.json())
+    .then(data => {
+        if (data.success) {
+            alert(`Welcome ${playerName}, you successfully joined room: ${roomCode}`);
+            console.log(`Player ${playerName} joined room ${roomCode}.`);
+        } else {
+            alert(data.message || 'Failed to join the room.');
+            console.error(`Join failed for room ${roomCode}: ${data.message}`);
+            // Näytä painike uudelleen, jos liittyminen epäonnistui
+            joinButton.disabled = false;
+            joinButton.style.display = 'block';
         }
-        input, button {
-            margin: 10px;
-            padding: 10px;
-            font-size: 16px;
-            width: 80%;
-        }
-    </style>
-</head>
-<body>
-    <h1>Welcome to the Game!</h1>
-    <p>Your room code will be automatically filled:</p>
-    <input type="text" id="roomCode" placeholder="Room Code" readonly>
-    <input type="text" id="playerName" placeholder="Enter Your Name">
-    <button onclick="joinGame()">Join Game</button>
-    <p id="gameStatus" style="font-weight: bold; color: green;"></p>
-
-    <script>
-        window.onload = function fetchRoomCode() {
-            fetch('https://guesswho-backend.onrender.com/latest-room')
-            .then(response => response.json())
-            .then(data => {
-                if (data.success) {
-                    document.getElementById('roomCode').value = data.roomCode;
-                } else {
-                    alert('No active room found. Please try again later.');
-                }
-            })
-            .catch(error => console.error('Error fetching room code:', error));
-
-            // Tarkista pelin tila
-            checkGameStatus();
-        };
-
-        function joinGame() {
-            const playerName = document.getElementById('playerName').value.trim();
-            const roomCode = document.getElementById('roomCode').value.trim();
-
-            if (!playerName) {
-                alert('Please enter your name.');
-                return;
-            }
-
-            fetch('https://guesswho-backend.onrender.com/join-room', {
-                method: 'POST',
-                headers: {
-                    'Content-Type': 'application/json',
-                },
-                body: JSON.stringify({ roomCode, playerName }),
-            })
-            .then(response => response.json())
-            .then(data => {
-                if (data.success) {
-                    alert(`Welcome ${playerName}, you successfully joined room: ${roomCode}`);
-                } else {
-                    alert(data.message || 'Failed to join the room.');
-                }
-            })
-            .catch(error => console.error('Error joining room:', error));
-        }
-
-        // Tarkista onko peli käynnistetty
-        function checkGameStatus() {
-            setInterval(() => {
-                const roomCode = document.getElementById('roomCode').value.trim();
-                fetch(`https://guesswho-backend.onrender.com/game-status/${roomCode}`)
-                .then(response => response.json())
-                .then(data => {
-                    if (data.status === 'started') {
-                        document.getElementById('gameStatus').innerText = 'Game has started!';
-                    }
-                })
-                .catch(error => console.error('Error checking game status:', error));
-            }, 3000); // Päivitetään 3 sekunnin välein
-        }
-    </script>
-</body>
-</html>
+    })
+    .catch(error => {
+        console.error('Error joining room:', error);
+        // Näytä painike uudelleen virhetilanteessa
+        joinButton.disabled = false;
+        joinButton.style.display = 'block';
+    });
+}
