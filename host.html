@@ -144,9 +144,10 @@
                 if (data.success) {
                     alert('Game started!');
                     document.getElementById('chatWindow').style.display = 'block';
-
+                    document.getElementById('startGameButton').style.display = 'none'; // Piilotetaan Start-painike
+        
                     // Käynnistä viestien hakeminen vasta nyt
-                    setInterval(fetchMessages, 3000); 
+                    setInterval(fetchMessages, 3000);
                 } else {
                     alert('Failed to start the game.');
                 }
