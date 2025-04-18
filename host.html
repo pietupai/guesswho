@@ -12,27 +12,49 @@
     <h2>Players:</h2>
     <ul id="playerList"></ul>
     <script>
-        let players = [];
+        let roomCode = '';
+        const playerListElement = document.getElementById('playerList');
 
         function createRoom() {
-            const roomCode = Math.random().toString(36).substring(2, 8).toUpperCase(); // Satunnainen huonekoodi
-            document.getElementById('roomCode').innerText = `Room Code: ${roomCode}`;
+            fetch('https://guesswho-backend.onrender.com/create-room', {
+                method: 'POST',
+                headers: {
+                    'Content-Type': 'application/json',
+                },
+                body: JSON.stringify({}) // Ei ylimääräisiä tietoja tässä vaiheessa
+            })
+            .then(response => response.json())
+            .then(data => {
+                roomCode = data.roomCode;
+                document.getElementById('roomCode').innerText = `Room Code: ${roomCode}`;
+                pollPlayers(); // Aloita pelaajalistan päivitys
+            })
+            .catch(error => console.error('Error creating room:', error));
         }
 
-        function addPlayer(playerName) {
-            players.push(playerName);
-            const list = document.getElementById('playerList');
-            list.innerHTML = '';
+        function updatePlayerList(players) {
+            playerListElement.innerHTML = ''; // Tyhjennä lista ensin
             players.forEach(player => {
                 const li = document.createElement('li');
                 li.textContent = player;
-                list.appendChild(li);
+                playerListElement.appendChild(li);
             });
         }
 
-        // Simuloi pelaajien liittymistä (testausta varten)
-        setTimeout(() => addPlayer('Player 1'), 2000);
-        setTimeout(() => addPlayer('Player 2'), 4000);
+        function pollPlayers() {
+            setInterval(() => {
+                fetch(`https://guesswho-backend.onrender.com/room/${roomCode}`)
+                .then(response => response.json())
+                .then(data => {
+                    if (data.success) {
+                        updatePlayerList(data.players);
+                    } else {
+                        console.error('Failed to fetch player list:', data.message);
+                    }
+                })
+                .catch(error => console.error('Error polling players:', error));
+            }, 3000); // Päivitä lista 3 sekunnin välein
+        }
     </script>
 </body>
 </html>
