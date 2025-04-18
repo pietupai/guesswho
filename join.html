@@ -101,6 +101,7 @@
         function sendMessage() {
             const message = document.getElementById('chatInput').value.trim();
             const playerName = document.getElementById('playerNameLabel').textContent.split(': ')[1]; // Get player's name
+            const roomCode = document.getElementById('roomCode').textContent.split(': ')[1]; 
         
             if (!message) {
                 alert('Please write a message before sending.');
