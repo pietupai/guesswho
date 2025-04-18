@@ -70,17 +70,19 @@
         }
 
         socket.on('playerJoined', (players) => {
+            console.log(`socket.on playerJoined : ${players}`);
             const playerListElement = document.getElementById('playerList');
             const playerTitle = document.querySelector('#playersTitle');
-            playerListElement.innerHTML = '';
+            playerListElement.innerHTML = ''; // Clear the list
             players.forEach(player => {
                 const li = document.createElement('li');
                 li.textContent = player;
                 playerListElement.appendChild(li);
             });
-
+        
+            // Show "Players:" title only if there are players
             if (players.length > 0) {
-                playerTitle.style.display = 'block'; // Make the "Players:" title visible
+                playerTitle.style.display = 'block';
             }
             console.log(`Updated players list: ${players}`);
         });
