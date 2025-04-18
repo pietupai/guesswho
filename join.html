@@ -32,6 +32,8 @@
             const playerName = document.getElementById('playerName').value.trim();
             const roomCodeElement = document.getElementById('roomCode');
 
+            nameContainer.innerHTML = `<label id="playerNameLabel">Name: ${playerName}</label>`;
+
             if (!playerName) {
                 alert('Please enter your name.');
                 return;
@@ -120,7 +122,10 @@
 <body>
     <h1>Join a Room</h1>
     <form id="joinForm" onsubmit="joinGame(); return false;">
-        <input type="text" id="playerName" placeholder="Enter your name" required><br>
+        <div id="nameContainer">
+            <input type="text" id="playerName" placeholder="Enter your name" required>
+        </div>
+
         <button type="submit">Join</button>
     </form>
 
