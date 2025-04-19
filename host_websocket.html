@@ -1,0 +1,158 @@
+
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Host Game</title>
+    <link rel="stylesheet" href="host_websocket.css">
+</head>
+<body>
+    <h1>Host a Game</h1>
+    <form id="hostForm" onsubmit="event.preventDefault(); createRoom();">
+        <label for="hostName">Your Name:</label>
+        <input type="text" id="hostName" name="hostName" placeholder="Enter your name">
+        <button type="submit">Create Room</button>
+    </form>
+    <p id="roomCode"></p>
+    <h2>Players:</h2>
+    <ul id="playerList"></ul>
+    <button id="startGameButton" style="display: none;" onclick="startGame()">Start Game</button>
+
+    <!-- Chat Window -->
+    <div id="chatWindow" style="display: none;">
+        <h3>Game Chat</h3>
+        <div id="messages">
+            <p><em>No messages yet. Start chatting!</em></p>
+        </div>
+        <input type="text" id="chatInput" placeholder="Write your message here...">
+        <button onclick="sendMessage()">Send</button>
+    </div>
+
+    <script src="https://cdn.socket.io/4.3.2/socket.io.min.js"></script>
+    <script>
+        let roomCode = '';
+        const playerListElement = document.getElementById('playerList');
+        const socket = io('https://guesswho-backend.onrender.com');
+
+        function createRoom() {
+            const hostName = document.getElementById('hostName').value.trim();
+        
+            if (!hostName) {
+                alert('Please enter your name.');
+                return;
+            }
+        
+            fetch('https://guesswho-backend.onrender.com/create-room', {
+                method: 'POST',
+                headers: {
+                    'Content-Type': 'application/json',
+                },
+                body: JSON.stringify({ hostName }),
+            })
+            .then(response => response.json())
+            .then(data => {
+                if (data.success) {
+                    roomCode = data.roomCode;
+                    document.getElementById('roomCode').innerText = `Room Code: ${roomCode}`;
+                    document.getElementById('hostForm').style.display = 'none';
+                    document.getElementById('startGameButton').style.display = 'block';
+        
+                    socket.emit('joinRoom', roomCode); // Join WebSocket room
+                    updatePlayerList([hostName]); // Immediately update player list with Host
+                } else {
+                    alert('Failed to create room.');
+                }
+            })
+            .catch(error => console.error('Error creating room:', error));
+        }
+
+        function updatePlayerList(players) {
+            const uniquePlayers = [...new Set(players)];
+            playerListElement.innerHTML = '';
+            uniquePlayers.forEach(player => {
+                const li = document.createElement('li');
+                li.textContent = player;
+                playerListElement.appendChild(li);
+            });
+        }
+
+        function fetchPlayerList() {
+            fetch(`https://guesswho-backend.onrender.com/room-players/${roomCode}`)
+                .then(response => response.json())
+                .then(data => {
+                    if (data.success) {
+                        updatePlayerList(data.players);
+                    } else {
+                        alert(data.message || 'Failed to fetch player list.');
+                    }
+                })
+                .catch(error => console.error('Error fetching player list:', error));
+        }
+
+        function startGame() {
+            const roomCodeElement = document.getElementById('roomCode');
+            if (!roomCodeElement || !roomCodeElement.textContent.trim()) {
+                alert('Room code not found.');
+                return;
+            }
+        
+            const roomCode = roomCodeElement.textContent.split(': ')[1]; 
+        
+            const startButton = document.getElementById('startGameButton');
+            startButton.style.display = 'none'; // Hide the button after clicking
+        
+            fetch('https://guesswho-backend.onrender.com/start-game', {
+                method: 'POST',
+                headers: {
+                    'Content-Type': 'application/json',
+                },
+                body: JSON.stringify({ roomCode }), // Send only the raw room code
+            })
+            .then(response => response.json())
+            .then(data => {
+                if (data.success) {
+                    alert('Game started successfully!');
+                    console.log(`Game started for room: ${roomCode}`);
+                    document.getElementById('chatWindow').style.display = 'block'; // Show chat window
+                } else {
+                    alert(data.message || 'Failed to start the game.');
+                    startButton.style.display = 'block'; // Show the button again if the request fails
+                }
+            })
+            .catch(error => {
+                console.error('Error starting the game:', error);
+                startButton.style.display = 'block'; // Show the button again in case of a network error
+            });
+        }
+
+        socket.on('playerJoined', (players) => {
+            updatePlayerList(players); // Update player list dynamically
+        });
+
+        socket.on('chatMessage', (data) => {
+            const messagesElement = document.getElementById('messages');
+            const p = document.createElement('p');
+            p.textContent = `${data.senderName}: ${data.message}`;
+            messagesElement.appendChild(p);
+        
+            // Auto-scroll to the bottom of the chat window
+            messagesElement.scrollTop = messagesElement.scrollHeight;
+        });
+        
+        function sendMessage() {
+            const message = document.getElementById('chatInput').value.trim();
+            const hostName = document.getElementById('hostName').value.trim();
+        
+            if (!message) {
+                alert('Please write a message before sending.');
+                return;
+            }
+        
+            socket.emit('chatMessage', { roomCode, senderName: hostName, message });
+            document.getElementById('chatInput').value = ''; // Clear input field
+        }
+
+    </script>
+</body>
+</html>
