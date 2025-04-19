@@ -1,0 +1,109 @@
+body {
+    font-family: Arial, sans-serif;
+    text-align: center;
+    padding: 20px;
+    margin: 0;
+    background-color: #f4f4f9; /* Vaalea taustaväri */
+}
+
+h1 {
+    color: #333; /* Tummanharmaa otsikkoteksti */
+}
+
+form {
+    display: flex;
+    flex-direction: column; /* Lomake rivitetään pystysuunnassa */
+    align-items: center;
+    margin-bottom: 20px; /* Tilaa lomakkeen alaosaan */
+}
+
+input, button {
+    margin: 10px 0;
+    padding: 10px;
+    font-size: 16px;
+    width: 80%;
+    max-width: 300px; /* Maksimileveys kentille ja painikkeille */
+}
+
+input {
+    border: 1px solid #ccc; /* Harmaa reuna */
+    border-radius: 5px; /* Pyöristetyt kulmat */
+    box-shadow: inset 0 1px 3px rgba(0,0,0,0.1); /* Kevyt sisäinen varjo */
+}
+
+input:focus {
+    outline: none; /* Poistetaan oletusreuna */
+    border-color: #007BFF; /* Korostettu reuna sinisellä */
+}
+
+button {
+    background-color: #007BFF; /* Sininen taustaväri */
+    color: #fff; /* Valkoinen teksti */
+    border: none; /* Ei reunaa */
+    border-radius: 5px; /* Pyöristetyt kulmat */
+    cursor: pointer; /* Klikattava käsi-ikoni */
+}
+
+button:hover {
+    background-color: #0056b3; /* Hover-tilassa tummempi sininen */
+}
+
+button:disabled {
+    background-color: #ccc; /* Harmaa painike pois käytössä */
+    cursor: not-allowed; /* Ei klikattavaa kursoria */
+}
+
+#roomCode {
+    font-weight: bold;
+    margin: 20px auto;
+    color: #007BFF; /* Sininen korostus huonekoodille */
+}
+
+#playerList {
+    list-style: none; /* Poistetaan luettelomerkinnät */
+    padding: 0;
+}
+
+#playerList li {
+    font-size: 16px;
+    color: #333; /* Tummanharmaa teksti pelaajille */
+    margin: 5px 0; /* Pelaajien väliin tilaa */
+}
+
+#chatWindow {
+    display: none; /* Piilotetaan oletuksena */
+    border: 1px solid #ccc; /* Vaaleanharmaa reunus */
+    padding: 10px;
+    width: 80%;
+    max-width: 500px; /* Rajoitetaan maksimi leveys */
+    margin: 20px auto;
+    background-color: #fff; /* Valkoinen tausta */
+    border-radius: 5px;
+    box-shadow: 0 2px 4px rgba(0,0,0,0.1); /* Kevyt varjo */
+}
+
+#messages {
+    max-height: 100px;
+    overflow-y: auto; /* Mahdollistetaan pystysuuntainen skrollaus */
+    border: 1px solid #ddd; /* Vaaleanharmaa reunus */
+    padding: 10px;
+    background-color: #fafafa; /* Lievä vaalea harmaa */
+    border-radius: 5px; /* Pyöristetyt kulmat */
+    margin-bottom: 10px;
+}
+
+#messages p {
+    margin: 5px 0; /* Viestien väliin tilaa */
+    font-size: 14px;
+    color: #333; /* Tummanharmaa viestiteksti */
+}
+
+#chatInput {
+    width: calc(100% - 85px); /* Mukautuva kentän leveys */
+    display: inline-block;
+    padding: 10px;
+    margin-right: 5px;
+    border: 1px solid #ccc; /* Harmaa reunus */
+    border-radius: 5px; /* Pyöristetyt kulmat */
+    box-sizing: border-box;
+}
