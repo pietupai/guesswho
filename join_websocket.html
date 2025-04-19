@@ -1,0 +1,176 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Join a Room</title>
+    <link rel="stylesheet" href="join_websocket.css"> <!-- External CSS file -->
+    <script src="https://cdn.socket.io/4.3.2/socket.io.min.js"></script> <!-- Socket.IO -->
+    <script defer>
+        const socket = io('https://guesswho-backend.onrender.com'); // Replace with your backend URL
+
+        function fetchRoomCode() {
+            fetch('https://guesswho-backend.onrender.com/latest-room')
+            .then(response => response.json())
+            .then(data => {
+                const roomCodeElement = document.getElementById('roomCode');
+                if (data.success) {
+                    roomCodeElement.textContent = `Room Code: ${data.roomCode}`;
+                    roomCodeElement.style.display = 'block'; // Make room code visible
+                    console.log(`Fetched room code: ${data.roomCode}`);
+                } else {
+                    alert(data.message || 'Failed to fetch room code.');
+                }
+            })
+            .catch(error => {
+                console.error('Error fetching room code:', error);
+            });
+        }
+
+        function joinGame() {
+            const joinButton = document.querySelector('button[type="submit"]');
+            const playerName = document.getElementById('playerName').value.trim();
+            const roomCodeElement = document.getElementById('roomCode');
+
+            nameContainer.innerHTML = `<label id="playerNameLabel">Name: ${playerName}</label>`;
+
+            if (!playerName) {
+                alert('Please enter your name.');
+                return;
+            }
+
+            if (!roomCodeElement || !roomCodeElement.textContent.trim()) {
+                alert('Room code not found.');
+                return;
+            }
+
+            const roomCode = roomCodeElement.textContent.split(': ')[1]; // Extract room code
+
+            joinButton.style.display = 'none'; // Hide Join button on submission
+            fetch('https://guesswho-backend.onrender.com/join-room', {
+                method: 'POST',
+                headers: {
+                    'Content-Type': 'application/json',
+                },
+                body: JSON.stringify({ roomCode, playerName }),
+            })
+            .then(response => response.json())
+            .then(data => {
+                if (data.success) {
+                    alert(`Joined room: ${roomCode}`);
+                    console.log(`Player ${playerName} joined room ${roomCode}`);
+                    socket.emit('joinRoom', roomCode); // Notify the server
+                    fetchPlayerList(roomCode); // Immediately fetch existing players
+                } else {
+                    alert(data.message || 'Failed to join the room.');
+                    joinButton.style.display = 'block'; // Show button again if joining fails
+                }
+            })
+            .catch(error => {
+                console.error('Error joining room:', error);
+                joinButton.style.display = 'block'; // Show button again on network error
+            });
+        }
+
+        function fetchPlayerList(roomCode) {
+            fetch(`https://guesswho-backend.onrender.com/room-players/${roomCode}`)
+                .then(response => response.json())
+                .then(data => {
+                    if (data.success) {
+                        updatePlayerList(data.players); // Populate list with current players
+                    } else {
+                        alert(data.message || 'Failed to fetch player list.');
+                    }
+                })
+                .catch(error => console.error('Error fetching player list:', error));
+        }
+
+        function updatePlayerList(players) {
+            const playerListElement = document.getElementById('playerList'); // Fetch the player list element
+            playerListElement.innerHTML = ''; // Clear the existing list
+        
+            players.forEach(player => {
+                const li = document.createElement('li'); // Create a new list item
+                li.textContent = player; // Add the player's name to the list item
+                playerListElement.appendChild(li); // Append the list item to the player list
+            });
+        
+            console.log('Updated player list:', players); // Log the updated list for debugging
+        }
+
+        function sendMessage() {
+            const message = document.getElementById('chatInput').value.trim();
+            const playerName = document.getElementById('playerNameLabel').textContent.split(': ')[1]; // Get player's name
+            const roomCode = document.getElementById('roomCode').textContent.split(': ')[1]; 
+        
+            if (!message) {
+                alert('Please write a message before sending.');
+                return;
+            }
+
+            console.log(`sendMessage : ${playerName} ${message}`);
+            socket.emit('chatMessage', { roomCode, senderName: playerName, message });
+            document.getElementById('chatInput').value = ''; // Clear input field
+        }
+
+        socket.on('playerJoined', (players) => {
+            console.log(`socket.on playerJoined : ${players}`);
+            const playerListElement = document.getElementById('playerList');
+            const playerTitle = document.querySelector('#playersTitle');
+            playerListElement.innerHTML = ''; // Clear the list
+            players.forEach(player => {
+                const li = document.createElement('li');
+                li.textContent = player;
+                playerListElement.appendChild(li);
+            });
+        
+            // Show "Players:" title only if there are players
+            if (players.length > 0) {
+                playerTitle.style.display = 'block';
+            }
+            console.log(`Updated players list: ${players}`);
+        });
+
+        socket.on('gameStarted', (data) => {
+            console.log(data.message); // Log to confirm event reception
+            document.getElementById('chatWindow').style.display = 'block'; // Show chat window
+        });
+
+        socket.on('chatMessage', (data) => {
+            const messagesElement = document.getElementById('messages');
+            const p = document.createElement('p');
+            p.textContent = `${data.senderName}: ${data.message}`;
+            messagesElement.appendChild(p);
+        
+            messagesElement.scrollTop = messagesElement.scrollHeight;
+        });
+
+        window.onload = fetchRoomCode; // Fetch room code when page loads
+    </script>
+</head>
+<body>
+    <h1>Join a Room</h1>
+    <form id="joinForm" onsubmit="joinGame(); return false;">
+        <div id="nameContainer">
+            <input type="text" id="playerName" placeholder="Enter your name" required>
+        </div>
+
+        <button type="submit">Join</button>
+    </form>
+
+    <p id="roomCode"></p> <!-- Displays room code -->
+
+    <h2 id="playersTitle" style="display: block;">Players:</h2>
+    <ul id="playerList"></ul> <!-- Displays players dynamically -->
+
+    <!-- Chat Window -->
+    <div id="chatWindow" style="display: none;">
+        <h3>Game Chat</h3>
+        <div id="messages">
+            <p><em>No messages yet. Start chatting!</em></p>
+        </div>
+        <input type="text" id="chatInput" placeholder="Write your message here...">
+        <button onclick="sendMessage()">Send</button>
+    </div>
+</body>
+</html>
